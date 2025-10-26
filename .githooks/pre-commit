@@ -1,0 +1,18 @@
+#!/bin/bash
+echo "Running ktlintFormat..."
+
+npm run lint:fix
+
+npm run format
+
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+  echo "❌ Error:failed. Please fix the issues and try again."
+  exit 1
+
+else
+  echo "✅ Formatting successful. Adding changes to the commit"
+  git add -u
+  exit 0
+fi

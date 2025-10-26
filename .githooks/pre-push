@@ -1,0 +1,17 @@
+#!/bin/bash
+
+
+  echo "Running gradlew build..."
+
+  # Run the Gradle 'build' task
+  # The 'set -e' command ensures the script exits if the command fails
+  npm run build
+
+  # Check the result of the previous command
+  if [ $? -ne 0 ]; then
+    echo "❌ build failed. Aborting push."
+    exit 1
+  else
+    echo "✅ build passed successfully. Proceeding with push."
+    exit 0
+  fi
