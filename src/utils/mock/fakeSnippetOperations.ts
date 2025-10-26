@@ -81,13 +81,14 @@ export class FakeSnippetOperations implements SnippetOperations {
     });
   }
 
-  shareSnippet(snippetId: string): Promise<Snippet> {
-    return new Promise((resolve) => {
-      // @ts-expect-error, it will always find it in the fake store
-      setTimeout(
-        () => resolve(this.fakeStore.getSnippetById(snippetId)),
-        DELAY,
-      );
+  shareSnippet(snippetId: string, _userId: string): Promise<Snippet> {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        void _userId;
+        const snippet = this.fakeStore.getSnippetById(snippetId);
+        if (snippet) resolve(snippet);
+        else reject(new Error(`Snippet with id ${snippetId} not found`));
+      }, DELAY);
     });
   }
 
