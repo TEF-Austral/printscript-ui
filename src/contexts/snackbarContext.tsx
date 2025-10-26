@@ -12,7 +12,7 @@ export type SnackbarContextType = {
 }
 
 
-// @ts-expect-error
+// @ts-expect-error aab
 export const SnackbarContext = createContext<SnackbarContextType>(null)
 
 export const useSnackbarContext = (): SnackbarContextType => useContext(SnackbarContext)

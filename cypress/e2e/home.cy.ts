@@ -1,4 +1,4 @@
-import {AUTH0_PASSWORD, AUTH0_USERNAME, BACKEND_URL, FRONTEND_URL} from "../../src/utils/constants";
+import { BACKEND_URL, FRONTEND_URL} from "../../src/utils/constants"; //AUTH0_PASSWORD, AUTH0_USERNAME,
 import {CreateSnippet} from "../../src/utils/snippet";
 
 describe('Home', () => {
