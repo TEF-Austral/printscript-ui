@@ -1,3 +1,4 @@
+# .github/workflows/versioning.yml
 name: Version Management
 
 on:
@@ -29,6 +30,12 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Basado en tu package.json
+          cache: 'npm'
+
       - name: Configure Git
         if: inputs.commit_version
         run: |
@@ -51,28 +58,22 @@ jobs:
             echo "bump=patch" >> $GITHUB_OUTPUT
           fi
 
-      - name: Update version
+      # ========== UPDATE VERSION (Node.js) ==========
+      - name: Update version using npm
         id: update_version
         run: |
-          CURRENT_VERSION=$(grep "^version=" gradle.properties | cut -d'=' -f2)
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          # Actualiza package.json y package-lock.json sin crear un tag git aquí
+          npm version ${{ steps.version.outputs.bump }} --no-git-tag-version
           
-          if [[ "${{ steps.version.outputs.bump }}" == "major" ]]; then
-            MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
-          elif [[ "${{ steps.version.outputs.bump }}" == "minor" ]]; then
-            MINOR=$((MINOR + 1)); PATCH=0
-          else
-            PATCH=$((PATCH + 1))
-          fi
-          
-          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-          sed -i "s/version=.*/version=${NEW_VERSION}/" gradle.properties
+          # Extrae la nueva versión del package.json para usarla como output
+          NEW_VERSION=$(jq -r .version package.json)
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Commit and tag
         if: inputs.commit_version
         run: |
-          git add gradle.properties
+          # Añade los archivos de versión actualizados
+          git add package.json package-lock.json
           git commit -m "chore: bump version to ${{ steps.update_version.outputs.new_version }} [skip ci]"
           git push
           git tag "v${{ steps.update_version.outputs.new_version }}"
