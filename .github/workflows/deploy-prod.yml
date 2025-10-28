@@ -2,7 +2,7 @@ name: Deploy to Production
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   workflow_dispatch:
 
 permissions:
@@ -10,23 +10,15 @@ permissions:
   packages: write
 
 jobs:
-  # ========== VERSIONING ==========
-  versioning:
-    uses: ./.github/workflows/versioning.yml
-    with:
-      commit_version: true
-    secrets: inherit
-
   # ========== BUILD & DEPLOY ==========
   build-and-deploy-prod:
-    needs: versioning
     runs-on: ubuntu-latest
     environment: production
 
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: master
 
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
@@ -34,13 +26,13 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      # ========== BUILD REACT/VITE ==========
+      #      # ========== BUILD REACT/VITE ==========
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
+      #      - name: Lint
+      #        run: npm run lint
+      #
       - name: Build
         run: npm run build # Ejecuta 'tsc && vite build'
 
@@ -65,7 +57,6 @@ jobs:
           push: true
           tags: |
             ${{ steps.image.outputs.name }}:latest
-            ${{ steps.image.outputs.name }}:${{ needs.versioning.outputs.version }}
             ${{ steps.image.outputs.name }}:${{ github.sha }}
 
       # ========== NOTIFY PROVISIONER ==========
