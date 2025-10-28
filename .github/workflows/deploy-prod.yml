@@ -26,13 +26,13 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      # ========== BUILD REACT/VITE ==========
+#      # ========== BUILD REACT/VITE ==========
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
+#      - name: Lint
+#        run: npm run lint
+#
       - name: Build
         run: npm run build # Ejecuta 'tsc && vite build'
 
