@@ -1,0 +1,85 @@
+name: Deploy UI to Development
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch: # Permite ejecución manual
+
+permissions:
+  contents: write # Necesario si tu workflow de versioning (si lo usas) necesita escribir tags/commits
+  packages: write # Necesario para subir imágenes a GHCR
+
+jobs:
+  # ========== BUILD & DEPLOY DEV ==========
+  build-and-deploy-dev:
+    runs-on: ubuntu-latest
+    # Si tienes un "Environment" de GitHub Actions para desarrollo, actívalo:
+    # environment: development
+
+    steps:
+      # 1. Checkout del código de la rama correcta
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Asegúrate que 'master' es la rama correcta
+          ref: master
+
+      # 2. Configurar Node.js (necesario para construir la UI)
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Instalar dependencias de Node.js
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Obtener nombre de imagen (ghcr.io/TEF-Austral/printscript-ui)
+      - name: Set image name
+        id: image
+        run: |
+          echo "name=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      # 5. Iniciar sesión en GitHub Container Registry (GHCR)
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }} # Secreto necesario
+
+      # 6. Construir y subir la imagen Docker para DEV
+      - name: Build and push Docker image (DEV)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          # Usa el Dockerfile que ya tienes listo para ARGs
+          file: ./Dockerfile.dev
+          push: true
+          # Taguea la imagen como ':dev'
+          tags: |
+            ${{ steps.image.outputs.name }}:dev
+          # Pasa las variables de DESARROLLO como argumentos de build
+          build-args: |
+            VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID_DEV }}
+            VITE_AUDIENCE=${{ secrets.VITE_AUDIENCE_DEV }}
+            VITE_AUTH0_DOMAIN=${{ secrets.VITE_AUTH0_DOMAIN_DEV }}
+
+      # 7. Notificar al repositorio provisioner que la imagen DEV se actualizó
+      - name: Notify provisioner (DEV)
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \ # Secreto necesario
+            https://api.github.com/repos/${{ github.repository_owner }}/png-provisioner/dispatches \
+            -d '{
+              "event_type": "service_updated",
+              "client_payload": {
+                "service": "${{ github.event.repository.name }}",
+                "environment": "dev",
+                "version": "dev", # O puedes usar versioning si quieres
+                "image_tag": "dev", # Le dice al provisioner qué tag buscar
+                "sha": "${{ github.sha }}"
+              }
+            }'
