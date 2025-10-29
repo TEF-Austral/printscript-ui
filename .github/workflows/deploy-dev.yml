@@ -3,7 +3,7 @@ name: Deploy UI to Development
 on:
   push:
     branches: [ master ]
-  workflow_dispatch: # Permite ejecución manual
+  workflow_dispatch:
 
 permissions:
   contents: write # Necesario si tu workflow de versioning (si lo usas) necesita escribir tags/commits
