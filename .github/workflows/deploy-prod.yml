@@ -50,6 +50,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
+
+
+            # TEMPORAL: Verificar secrets
+      - name: Debug - Verify secrets (first/last 4 chars only)
+        run: |
+          echo "Client ID (primeros 4): ${VITE_AUTH0_CLIENT_ID_DEV:0:4}"
+          echo "Client ID (últimos 4): ${VITE_AUTH0_CLIENT_ID_DEV: -4}"
+          echo "Client ID length: ${#VITE_AUTH0_CLIENT_ID_DEV}"
+          echo "Domain: ${{ secrets.VITE_AUTH0_DOMAIN_DEV }}"
+          echo "Audience: ${{ secrets.VITE_AUDIENCE_DEV }}"
+        env:
+          VITE_AUTH0_CLIENT_ID_DEV: ${{ secrets.VITE_AUTH0_CLIENT_ID_DEV }}
+
       - name: Build and push Docker image (PROD)
         uses: docker/build-push-action@v5
         with:
@@ -63,6 +76,7 @@ jobs:
             VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID }}
             VITE_AUDIENCE=${{ secrets.VITE_AUDIENCE }}
             VITE_AUTH0_DOMAIN=${{ secrets.VITE_AUTH0_DOMAIN }}
+          
 
       # ========== NOTIFY PROVISIONER ==========
       - name: Notify provisioner (PROD)
