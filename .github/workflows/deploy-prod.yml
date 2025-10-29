@@ -55,13 +55,13 @@ jobs:
             # TEMPORAL: Verificar secrets
       - name: Debug - Verify secrets (first/last 4 chars only)
         run: |
-          echo "Client ID (primeros 4): ${VITE_AUTH0_CLIENT_ID_DEV:0:4}"
-          echo "Client ID (últimos 4): ${VITE_AUTH0_CLIENT_ID_DEV: -4}"
-          echo "Client ID length: ${#VITE_AUTH0_CLIENT_ID_DEV}"
-          echo "Domain: ${{ secrets.VITE_AUTH0_DOMAIN_DEV }}"
-          echo "Audience: ${{ secrets.VITE_AUDIENCE_DEV }}"
+          echo "Client ID (primeros 4): ${VITE_AUTH0_CLIENT_ID:0:4}"
+          echo "Client ID (últimos 4): ${VITE_AUTH0_CLIENT_ID: -4}"
+          echo "Client ID length: ${#VITE_AUTH0_CLIENT_ID}"
+          echo "Domain: ${{ secrets.VITE_AUTH0_DOMAIN }}"
+          echo "Audience: ${{ secrets.VITE_AUDIENCE }}"
         env:
-          VITE_AUTH0_CLIENT_ID_DEV: ${{ secrets.VITE_AUTH0_CLIENT_ID_DEV }}
+          VITE_AUTH0_CLIENT_ID_DEV: ${{ secrets.VITE_AUTH0_CLIENT_ID}}
 
       - name: Build and push Docker image (PROD)
         uses: docker/build-push-action@v5
