@@ -39,7 +39,7 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async createSnippet(createSnippet: CreateSnippet): Promise<Snippet> {
-    return this.request<Snippet>(`/snippets`, {
+    return this.request<Snippet>(`/snippets/`, {
       method: "POST",
       body: JSON.stringify(createSnippet),
     });
