@@ -88,7 +88,6 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                 <Input onChange={e => setSnippetName(e.target.value)} value={snippetName} id="name"
                        sx={{width: '50%'}}/>
             </Box>
-            {/* ← AGREGAR ESTE BLOQUE */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <InputLabel htmlFor="description">Description</InputLabel>
                 <Input
@@ -98,8 +97,7 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                     sx={{width: '100%'}}
                 />
             </Box>
-
-            {/* ← AGREGAR ESTE BLOQUE */}
+            
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <InputLabel htmlFor="version">Version</InputLabel>
                 <Input
