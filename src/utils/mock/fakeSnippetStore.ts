@@ -20,6 +20,8 @@ const INITIAL_SNIPPETS: Snippet[] = [
     author: "John Doe",
     language: "printscript",
     extension: "prs",
+    description: "This is a super snippet",
+    version: "1.0.0",
   },
   {
     id: "c48cf644-fbc1-4649-a8f4-9dd7110640d9",
@@ -29,6 +31,8 @@ const INITIAL_SNIPPETS: Snippet[] = [
     author: "John Doe",
     language: "printscript",
     extension: "prs",
+    description: "This is a super snippet",
+    version: "1.0.0",
   },
   {
     id: "34bf4b7a-d4a1-48be-bb26-7d9a3be46227",
@@ -38,6 +42,8 @@ const INITIAL_SNIPPETS: Snippet[] = [
     author: "John Doe",
     language: "printscript",
     extension: "prs",
+    description: "This is a super snippet",
+    version: "1.0.0",
   },
 ];
 
