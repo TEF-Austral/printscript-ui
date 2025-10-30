@@ -1,4 +1,4 @@
-name: Deploy to Development
+name: Deploy to Production
 
 on:
   push:
@@ -6,36 +6,36 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
   # ========== BUILD & DEPLOY ==========
-  build-and-deploy-dev:
+  build-and-deploy-prod:
     runs-on: ubuntu-latest
     environment: development
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          ref: release
 
-      - name: Grant execute permission
-        run: chmod +x ./gradlew
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-      # ========== BUILD GRADLE ========== #
-      - name: Build with Gradle
-        run: ./gradlew build --no-daemon
+      #      # ========== BUILD REACT/VITE ==========
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
         env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GHCR_TOKEN }}
-          REDIS_TOKEN: ${{ secrets.REDIS_TOKEN }}
-          AUTH0_ISSUER_URI: ${{ secrets.AUTH0_ISSUER_URI }}
-          AUTH0_AUDIENCE: ${{ secrets.AUTH0_AUDIENCE }}
+          VITE_AUTH0_DOMAIN: ${{ secrets.VITE_AUTH0_DOMAIN }}
+          VITE_AUTH0_CLIENT_ID: ${{ secrets.VITE_AUTH0_CLIENT_ID_DEV }}
+          VITE_AUDIENCE: ${{ secrets.VITE_AUDIENCE }}
+        run: npm run build # Ejecuta 'tsc && vite build'
 
       # ========== BUILD & PUSH DOCKER ==========
       - name: Set image name
@@ -50,22 +50,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Build and push Docker image (DEV)
+      - name: Build and push Docker image (PROD)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile.dev
           push: true
-          build-args: |
-            GITHUB_ACTOR=${{ github.actor }}
-            REDIS_TOKEN=${{ secrets.REDIS_TOKEN }}
           tags: |
-            ${{ steps.image.outputs.name }}:dev
-            ${{ steps.image.outputs.name }}:dev-${{ needs.versioning.outputs.version }}
-            ${{ steps.image.outputs.name }}:dev-${{ github.sha }}
+            ${{ steps.image.outputs.name }}:latest
+          build-args: |
+            VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID_DEV }}
+            VITE_AUDIENCE=${{ secrets.VITE_AUDIENCE }}
+            VITE_AUTH0_DOMAIN=${{ secrets.VITE_AUTH0_DOMAIN }}
+      
 
       # ========== NOTIFY PROVISIONER ==========
-      - name: Notify provisioner (DEV)
+      - name: Notify provisioner (PROD)
         run: |
           curl -X POST \
             -H "Accept: application/vnd.github.v3+json" \
@@ -75,9 +75,8 @@ jobs:
               "event_type": "service_updated",
               "client_payload": {
                 "service": "${{ github.event.repository.name }}",
-                "environment": "dev",
+                "environment": "prod",
                 "version": "${{ needs.versioning.outputs.version }}",
-                "image_tag": "dev",
                 "sha": "${{ github.sha }}"
               }
             }'
