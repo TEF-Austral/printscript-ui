@@ -71,7 +71,6 @@ jobs:
           push: true
           tags: |
             ${{ steps.image.outputs.name }}:latest
-            ${{ steps.image.outputs.name }}:${{ github.sha }}
           build-args: | 
             VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID_DEV }}
             VITE_AUDIENCE=${{ secrets.VITE_AUDIENCE }}
