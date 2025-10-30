@@ -12,14 +12,22 @@ import { TestCaseResult } from "./queries";
 import { PaginatedUsers } from "./users";
 import { BACKEND_URL } from "./constants";
 
-// Minimal HTTP implementation using fetch. Adjust endpoints to match your backend API.
 export class HttpSnippetOperations implements SnippetOperations {
   private base = BACKEND_URL;
+  private readonly getToken: () => Promise<string>;
+
+  constructor(getToken: () => Promise<string>) {
+    this.getToken = getToken;
+  }
 
   private async request<T>(path: string, opts: RequestInit = {}): Promise<T> {
+    const token = await this.getToken();
+
     const res = await fetch(`${this.base}${path}`, {
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...opts.headers,
       },
       ...opts,
     });
@@ -97,9 +105,13 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async formatSnippet(snippetContent: string): Promise<string> {
+    const token = await this.getToken();
     const res = await fetch(`${this.base}/format`, {
       method: "POST",
-      headers: { "Content-Type": "text/plain" },
+      headers: {
+        "Content-Type": "text/plain",
+        Authorization: `Bearer ${token}`,
+      },
       body: snippetContent,
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

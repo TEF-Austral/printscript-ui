@@ -22,7 +22,16 @@ export const useSnippetsOperations = () => {
             .catch(error => console.error(error));
     });
 
-    const snippetOperations: SnippetOperations = new HttpSnippetOperations();
+    const snippetOperations: SnippetOperations = new HttpSnippetOperations(
+        async () => {
+            try {
+                return await getAccessTokenSilently();
+            } catch (error) {
+                console.error("Error getting token:", error);
+                throw error;
+            }
+        }
+    );
 
     return snippetOperations
 }
