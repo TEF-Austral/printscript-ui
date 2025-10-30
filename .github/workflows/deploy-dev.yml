@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Deploy to Development
 
 on:
   push:
@@ -6,36 +6,44 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   packages: write
 
 jobs:
+  # ========== VERSIONING ==========
+  versioning:
+    uses: ./.github/workflows/versioning.yml
+    with:
+      commit_version: false
+    secrets: inherit
+
   # ========== BUILD & DEPLOY ==========
-  build-and-deploy-prod:
+  build-and-deploy-dev:
+    needs: versioning
     runs-on: ubuntu-latest
-    environment: production
+    environment: development
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
-          ref: release
+          java-version: '21'
+          distribution: 'temurin'
 
-      - name: Set up Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+      - name: Grant execute permission
+        run: chmod +x ./gradlew
 
-      #      # ========== BUILD REACT/VITE ==========
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
+      # ========== BUILD GRADLE ==========
+      - name: Build with Gradle
+        run: ./gradlew build --no-daemon
         env:
-          VITE_AUTH0_DOMAIN: ${{ secrets.VITE_AUTH0_DOMAIN }}
-          VITE_AUTH0_CLIENT_ID: ${{ secrets.VITE_AUTH0_CLIENT_ID_DEV }}
-          VITE_AUDIENCE: ${{ secrets.VITE_AUDIENCE }}
-        run: npm run build # Ejecuta 'tsc && vite build'
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          REDIS_TOKEN: ${{ secrets.REDIS_TOKEN }}
+          AUTH0_ISSUER_URI: ${{ secrets.AUTH0_ISSUER_URI }}
+          AUTH0_AUDIENCE: ${{ secrets.AUTH0_AUDIENCE }}
 
       # ========== BUILD & PUSH DOCKER ==========
       - name: Set image name
@@ -50,21 +58,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Build and push Docker image (PROD)
+      - name: Build and push Docker image (DEV)
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.prod
+          file: ./Dockerfile.dev
           push: true
+          build-args: |
+            GITHUB_ACTOR=${{ github.actor }}
+            REDIS_TOKEN=${{ secrets.REDIS_TOKEN }}
           tags: |
             ${{ steps.image.outputs.name }}:dev
-          build-args: |
-            VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID_DEV }}
-            VITE_AUDIENCE=${{ secrets.VITE_AUDIENCE }}
-            VITE_AUTH0_DOMAIN=${{ secrets.VITE_AUTH0_DOMAIN }}
+            ${{ steps.image.outputs.name }}:dev-${{ needs.versioning.outputs.version }}
+            ${{ steps.image.outputs.name }}:dev-${{ github.sha }}
 
       # ========== NOTIFY PROVISIONER ==========
-      - name: Notify provisioner (PROD)
+      - name: Notify provisioner (DEV)
         run: |
           curl -X POST \
             -H "Accept: application/vnd.github.v3+json" \
@@ -74,8 +83,9 @@ jobs:
               "event_type": "service_updated",
               "client_payload": {
                 "service": "${{ github.event.repository.name }}",
-                "environment": "prod",
+                "environment": "dev",
                 "version": "${{ needs.versioning.outputs.version }}",
+                "image_tag": "dev",
                 "sha": "${{ github.sha }}"
               }
             }'
