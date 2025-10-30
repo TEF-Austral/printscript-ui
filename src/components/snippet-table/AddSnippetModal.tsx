@@ -97,7 +97,7 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                     sx={{width: '100%'}}
                 />
             </Box>
-            
+
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <InputLabel htmlFor="version">Version</InputLabel>
                 <Input
