@@ -24,12 +24,12 @@ export type UpdateSnippet = {
 
 export type Snippet = CreateSnippet & {
   id: string;
-} & SnippetStatus;
+}; // & SnippetStatus;
 
-type SnippetStatus = {
-  compliance: ComplianceEnum;
-  author: string;
-};
+// type SnippetStatus = {
+//   compliance: ComplianceEnum;
+//   author: string;
+// };
 export type PaginatedSnippets = Pagination & {
   snippets: Snippet[];
 };
