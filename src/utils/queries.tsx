@@ -9,7 +9,7 @@ import {useAuth0} from "@auth0/auth0-react";
 import {useEffect} from "react";
 
 
-import {HttpSnippetOperations} from "./httpSnippetOperations.ts"; // ← Agregar import
+import {HttpSnippetOperations} from "./httpSnippetOperations.ts";
 
 export const useSnippetsOperations = () => {
     const {getAccessTokenSilently} = useAuth0()
