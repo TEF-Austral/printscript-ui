@@ -31,6 +31,8 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     const [language, setLanguage] = useState(defaultSnippet?.language ?? "printscript");
     const [code, setCode] = useState(defaultSnippet?.content ?? "");
     const [snippetName, setSnippetName] = useState(defaultSnippet?.name ?? "")
+    const [description, setDescription] = useState("") // ← Agregar estado
+    const [version, setVersion] = useState("1.0")
     const {mutateAsync: createSnippet, isLoading: loadingSnippet} = useCreateSnippet({
         onSuccess: () => queryClient.invalidateQueries('listSnippets')
     })
@@ -41,6 +43,8 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
             name: snippetName,
             content: code,
             language: language,
+            description: description,
+            version: version,
             extension: fileTypes?.find((f) => f.language === language)?.extension ?? "prs"
         }
         await createSnippet(newSnippet);
@@ -52,6 +56,8 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
             setCode(defaultSnippet?.content)
             setLanguage(defaultSnippet?.language)
             setSnippetName(defaultSnippet?.name)
+            setDescription(defaultSnippet?.description)
+            setVersion(defaultSnippet?.version)
         }
     }, [defaultSnippet]);
 
@@ -81,6 +87,27 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                 <InputLabel htmlFor="name">Name</InputLabel>
                 <Input onChange={e => setSnippetName(e.target.value)} value={snippetName} id="name"
                        sx={{width: '50%'}}/>
+            </Box>
+            {/* ← AGREGAR ESTE BLOQUE */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <InputLabel htmlFor="description">Description</InputLabel>
+                <Input
+                    onChange={e => setDescription(e.target.value)}
+                    value={description}
+                    id="description"
+                    sx={{width: '100%'}}
+                />
+            </Box>
+
+            {/* ← AGREGAR ESTE BLOQUE */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <InputLabel htmlFor="version">Version</InputLabel>
+                <Input
+                    onChange={e => setVersion(e.target.value)}
+                    value={version}
+                    id="version"
+                    sx={{width: '50%'}}
+                />
             </Box>
             <Box sx={{
                 display: 'flex',

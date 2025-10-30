@@ -10,8 +10,10 @@ export type ComplianceEnum =
 export type CreateSnippet = {
   name: string;
   content: string;
+  description: string;
   language: string;
   extension: string;
+  version: string;
 };
 
 export type CreateSnippetWithLang = CreateSnippet & { language: string };
