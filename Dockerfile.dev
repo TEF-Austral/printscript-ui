@@ -1,10 +1,32 @@
+# Usa la misma imagen base de Node.js
 FROM node:20-alpine
 WORKDIR /app
 
+# Copia los archivos de definición de dependencias
 COPY package*.json ./
-RUN npm ci
+# Instala dependencias (incluyendo las de desarrollo)
+RUN npm install
+
+# Copia el resto del código fuente
 COPY . .
 
-ARG PORT
+# --- INYECTAR VARIABLES DE BUILD PARA AUTH0 ---
+# Declara los argumentos que recibirá el build desde el workflow (deploy-dev.yml)
+ARG VITE_AUTH0_DOMAIN
+ARG VITE_AUTH0_CLIENT_ID
+ARG VITE_AUDIENCE
+
+# Convierte los argumentos en variables de entorno para que Vite las use al iniciar
+ENV VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN
+ENV VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID
+ENV VITE_AUDIENCE=$VITE_AUDIENCE
+# --- FIN DE INYECCIÓN DE VARIABLES ---
+
+# Expone el puerto por defecto de Vite (o el que uses)
+ARG PORT=5173
+ENV PORT=$PORT
 EXPOSE $PORT
+
+# Comando para iniciar el servidor de desarrollo de Vite
+# Vite leerá las ENV VITE_* al arrancar
 CMD ["npm", "run", "dev"]

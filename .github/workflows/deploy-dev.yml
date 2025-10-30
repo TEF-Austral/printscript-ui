@@ -2,7 +2,7 @@ name: Deploy to Production
 
 on:
   push:
-    branches: [ master ]
+    branches: [ release ]
   workflow_dispatch:
 
 permissions:
@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: master
+          ref: release
 
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
@@ -33,7 +33,7 @@ jobs:
       - name: Build
         env:
           VITE_AUTH0_DOMAIN: ${{ secrets.VITE_AUTH0_DOMAIN }}
-          VITE_AUTH0_CLIENT_ID: ${{ secrets.VITE_AUTH0_CLIENT_ID_DEV }}
+          VITE_AUTH0_CLIENT_ID: ${{ secrets.VITE_AUTH0_CLIENT_ID }}
           VITE_AUDIENCE: ${{ secrets.VITE_AUDIENCE }}
         run: npm run build # Ejecuta 'tsc && vite build'
 
@@ -50,19 +50,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-
-
-            # TEMPORAL: Verificar secrets
-      - name: Debug - Verify secrets (first/last 4 chars only)
-        run: |
-          echo "Client ID (primeros 4): ${VITE_AUTH0_CLIENT_ID_DEV:0:4}"
-          echo "Client ID (últimos 4): ${VITE_AUTH0_CLIENT_ID_DEV: -4}"
-          echo "Client ID length: ${#VITE_AUTH0_CLIENT_ID_DEV}"
-          echo "Domain: ${{ secrets.VITE_AUTH0_DOMAIN }}"
-          echo "Audience: ${{ secrets.VITE_AUDIENCE }}"
-        env:
-          VITE_AUTH0_CLIENT_ID_DEV: ${{ secrets.VITE_AUTH0_CLIENT_ID_DEV}}
-
       - name: Build and push Docker image (PROD)
         uses: docker/build-push-action@v5
         with:
@@ -70,12 +57,11 @@ jobs:
           file: ./Dockerfile.prod
           push: true
           tags: |
-            ${{ steps.image.outputs.name }}:latest
-          build-args: | 
-            VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID_DEV }}
+            ${{ steps.image.outputs.name }}:dev
+          build-args: |
+            VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID }}
             VITE_AUDIENCE=${{ secrets.VITE_AUDIENCE }}
             VITE_AUTH0_DOMAIN=${{ secrets.VITE_AUTH0_DOMAIN }}
-          
 
       # ========== NOTIFY PROVISIONER ==========
       - name: Notify provisioner (PROD)
