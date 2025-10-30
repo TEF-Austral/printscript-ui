@@ -35,7 +35,7 @@ jobs:
       - name: Grant execute permission
         run: chmod +x ./gradlew
 
-      # ========== BUILD GRADLE ==========
+      # ========== BUILD GRADLE ========== #
       - name: Build with Gradle
         run: ./gradlew build --no-daemon
         env:
