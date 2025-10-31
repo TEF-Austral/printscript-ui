@@ -1,5 +1,6 @@
 import { SnippetOperations } from "./snippetOperations";
 import {
+  ComplianceEnum,
   CreateSnippet,
   PaginatedSnippets,
   Snippet,
@@ -11,6 +12,7 @@ import { Rule } from "../types/Rule";
 import { TestCaseResult } from "./queries";
 import { PaginatedUsers } from "./users";
 import { BACKEND_URL } from "./constants";
+import { BackendSnippet } from "../types/BackendSnippet.ts";
 
 export class HttpSnippetOperations implements SnippetOperations {
   private base = BACKEND_URL;
@@ -60,7 +62,34 @@ export class HttpSnippetOperations implements SnippetOperations {
     params.set("page", String(page));
     params.set("pageSize", String(pageSize));
     if (snippetName) params.set("name", snippetName);
-    return this.request<PaginatedSnippets>(`/snippets?${params.toString()}`);
+
+    const raw = await this.request<PaginatedSnippets | BackendSnippet[]>(
+      `/snippets?${params.toString()}`,
+    );
+
+    if (Array.isArray(raw)) {
+      const snippets: Snippet[] = raw.map((snippet) => ({
+        id: String(snippet.snippetId ?? "Unknown ID"),
+        name: snippet.name,
+        description: snippet.description ?? "Unknown Description",
+        language: snippet.language,
+        version: snippet.version,
+        content: "",
+        extension: "",
+        compliance: (snippet.compliance ?? "pending") as ComplianceEnum,
+        author: snippet.author ?? "Unknown Author",
+      }));
+
+      return {
+        page,
+        page_size: pageSize,
+        count: snippets.length,
+        snippets,
+      };
+    }
+
+    // Otherwise assume it's already the expected paginated structure
+    return raw as PaginatedSnippets;
   }
 
   async updateSnippetById(
