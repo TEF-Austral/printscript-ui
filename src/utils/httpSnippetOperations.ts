@@ -48,9 +48,20 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async getSnippetById(id: string): Promise<Snippet | undefined> {
-    return this.request<Snippet | undefined>(
+    const response = await this.request<BackendSnippet>(
       `/snippets/${encodeURIComponent(id)}`,
     );
+    return this.mapBackendSnippetToSnippet(response);
+  }
+
+  private getExtensionFromLanguage(language: string): string {
+    const extensions: Record<string, string> = {
+      PRINTSCRIPT: "prs",
+      JAVA: "java",
+      PYTHON: "py",
+      GOLANG: "go",
+    };
+    return extensions[language.toUpperCase()] || "txt";
   }
 
   async listSnippetDescriptors(
@@ -68,17 +79,7 @@ export class HttpSnippetOperations implements SnippetOperations {
     );
 
     if (Array.isArray(raw)) {
-      const snippets: Snippet[] = raw.map((snippet) => ({
-        id: String(snippet.snippetId ?? "Unknown ID"),
-        name: snippet.name,
-        description: snippet.description ?? "Unknown Description",
-        language: snippet.language,
-        version: snippet.version,
-        content: "",
-        extension: "",
-        compliance: (snippet.compliance ?? "pending") as ComplianceEnum,
-        author: snippet.author ?? "Unknown Author",
-      }));
+      const snippets = raw.map((s) => this.mapBackendSnippetToSnippet(s));
 
       return {
         page,
@@ -88,7 +89,6 @@ export class HttpSnippetOperations implements SnippetOperations {
       };
     }
 
-    // Otherwise assume it's already the expected paginated structure
     return raw as PaginatedSnippets;
   }
 
@@ -192,5 +192,19 @@ export class HttpSnippetOperations implements SnippetOperations {
       method: "PUT",
       body: JSON.stringify(newRules),
     });
+  }
+
+  private mapBackendSnippetToSnippet(backendSnippet: BackendSnippet): Snippet {
+    return {
+      id: String(backendSnippet.snippetId ?? "0"),
+      name: backendSnippet.name,
+      description: backendSnippet.description ?? "",
+      content: backendSnippet.content ?? "",
+      language: backendSnippet.language,
+      version: backendSnippet.version,
+      extension: this.getExtensionFromLanguage(backendSnippet.language),
+      compliance: (backendSnippet.compliance ?? "pending") as ComplianceEnum,
+      author: backendSnippet.author ?? "Unknown Author",
+    };
   }
 }

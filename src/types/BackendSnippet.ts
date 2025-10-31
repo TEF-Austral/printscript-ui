@@ -4,10 +4,9 @@ export type BackendSnippet = {
   snippetId: number | string;
   name: string;
   description: string;
-  bucketKey: string;
-  bucketContainer: string;
+  content: string;
   language: string;
   version: string;
-  author?: string;
+  author: string;
   compliance?: ComplianceEnum;
 };
