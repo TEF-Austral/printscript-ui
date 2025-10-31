@@ -10,3 +10,10 @@ export type BackendSnippet = {
   author: string;
   compliance?: ComplianceEnum;
 };
+
+export type BackendPaginatedSnippets = {
+  page?: number;
+  pageSize?: number;
+  count?: number;
+  snippets: BackendSnippet[];
+};

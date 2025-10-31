@@ -12,7 +12,10 @@ import { Rule } from "../types/Rule";
 import { TestCaseResult } from "./queries";
 import { PaginatedUsers } from "./users";
 import { BACKEND_URL } from "./constants";
-import { BackendSnippet } from "../types/BackendSnippet.ts";
+import {
+  BackendPaginatedSnippets,
+  BackendSnippet,
+} from "../types/BackendSnippet.ts";
 
 export class HttpSnippetOperations implements SnippetOperations {
   private base = BACKEND_URL;
@@ -74,7 +77,7 @@ export class HttpSnippetOperations implements SnippetOperations {
     params.set("pageSize", String(pageSize));
     if (snippetName) params.set("name", snippetName);
 
-    const raw = await this.request<PaginatedSnippets | BackendSnippet[]>(
+    const raw = await this.request<BackendPaginatedSnippets | BackendSnippet[]>(
       `/snippets?${params.toString()}`,
     );
 
@@ -89,7 +92,16 @@ export class HttpSnippetOperations implements SnippetOperations {
       };
     }
 
-    return raw as PaginatedSnippets;
+    const mappedSnippets = raw.snippets.map((s: BackendSnippet) =>
+      this.mapBackendSnippetToSnippet(s),
+    );
+
+    return {
+      page: raw.page ?? page,
+      page_size: raw.pageSize ?? pageSize,
+      count: raw.count ?? mappedSnippets.length,
+      snippets: mappedSnippets,
+    };
   }
 
   async updateSnippetById(
