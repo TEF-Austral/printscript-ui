@@ -10,7 +10,7 @@ import { FileType } from "../types/FileType";
 import { TestCase } from "../types/TestCase";
 import { Rule } from "../types/Rule";
 import { TestCaseResult } from "./queries";
-import { PaginatedUsers } from "./users";
+import { BackendPaginatedUsers, PaginatedUsers, User } from "./users";
 import { BACKEND_URL } from "./constants";
 import {
   BackendPaginatedSnippets,
@@ -115,16 +115,34 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async getUserFriends(
-    name = "",
+    email = "",
     page = 1,
     pageSize = 10,
   ): Promise<PaginatedUsers> {
     const params = new URLSearchParams({
-      name,
-      page: String(page),
+      page: String(page - 1),
       pageSize: String(pageSize),
     });
-    return this.request<PaginatedUsers>(`/users/friends?${params.toString()}`);
+
+    if (email) {
+      params.set("query", `email:"${email}"`);
+    }
+
+    const backendResponse = await this.request<BackendPaginatedUsers>(
+      `/api/authorization/api/users?${params.toString()}`,
+    );
+
+    const frontendUsers: User[] = backendResponse.users.map((backendUser) => ({
+      id: backendUser.id,
+      name: backendUser.username || "Unknown",
+    }));
+
+    return {
+      users: frontendUsers,
+      page: backendResponse.page + 1,
+      page_size: backendResponse.pageSize,
+      count: backendResponse.total,
+    };
   }
 
   async shareSnippet(snippetId: string, userId: string): Promise<Snippet> {
