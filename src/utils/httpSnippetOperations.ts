@@ -1,4 +1,4 @@
-import { SnippetOperations } from "./snippetOperations";
+import { SnippetOperations, Permission } from "./snippetOperations";
 import {
   ComplianceEnum,
   CreateSnippet,
@@ -11,15 +11,16 @@ import { TestCase } from "../types/TestCase";
 import { Rule } from "../types/Rule";
 import { TestCaseResult } from "./queries";
 import { BackendPaginatedUsers, PaginatedUsers, User } from "./users";
-import { AUTH_URL, SNIPPET_URL } from "./constants";
+import { AUTH_URL, SNIPPET_URL, PRINTSCRIPT_URL } from "./constants";
 import {
   BackendPaginatedSnippets,
   BackendSnippet,
 } from "../types/BackendSnippet.ts";
 
 export class HttpSnippetOperations implements SnippetOperations {
-  private snippetUrl = SNIPPET_URL;
-  private authUrl = AUTH_URL;
+  private readonly snippetUrl = SNIPPET_URL;
+  private readonly authUrl = AUTH_URL;
+  private readonly printScriptUrl = PRINTSCRIPT_URL;
   private readonly getToken: () => Promise<string>;
 
   constructor(getToken: () => Promise<string>) {
@@ -157,12 +158,16 @@ export class HttpSnippetOperations implements SnippetOperations {
     };
   }
 
-  async shareSnippet(snippetId: string, userId: string): Promise<Snippet> {
+  async shareSnippet(
+    snippetId: string,
+    userId: string,
+    permissions?: Permission[] | Permission,
+  ): Promise<Snippet> {
     return this.request<Snippet>(
       `/snippets/${encodeURIComponent(snippetId)}/share`,
       {
         method: "POST",
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, permissions }),
       },
     );
   }
@@ -177,7 +182,7 @@ export class HttpSnippetOperations implements SnippetOperations {
 
   async formatSnippet(snippetContent: string): Promise<string> {
     const token = await this.getToken();
-    const res = await fetch(`${this.snippetUrl}/format`, {
+    const res = await fetch(`${this.printScriptUrl}/format`, {
       method: "POST",
       headers: {
         "Content-Type": "text/plain",
@@ -207,8 +212,11 @@ export class HttpSnippetOperations implements SnippetOperations {
     return id;
   }
 
-  async testSnippet(): Promise<TestCaseResult> {
-    return this.request<TestCaseResult>(`/test`);
+  async testSnippet(testCase: Partial<TestCase>): Promise<TestCaseResult> {
+    return this.request<TestCaseResult>(`/test`, {
+      method: "POST",
+      body: JSON.stringify(testCase),
+    });
   }
 
   async deleteSnippet(id: string): Promise<string> {

@@ -10,6 +10,10 @@ import { TestCaseResult } from "./queries.tsx";
 import { FileType } from "../types/FileType.ts";
 import { Rule } from "../types/Rule.ts";
 
+// New: minimal Permission type to express share permissions.
+// It's intentionally local to this interface file to avoid changing upstream types.
+export type Permission = "read" | "write";
+
 export interface SnippetOperations {
   listSnippetDescriptors(
     page: number,
@@ -29,11 +33,11 @@ export interface SnippetOperations {
     pageSize?: number,
   ): Promise<PaginatedUsers>;
 
-  shareSnippet(snippetId: string, userId: string): Promise<Snippet>;
-
-  getFormatRules(): Promise<Rule[]>;
-
-  getLintingRules(): Promise<Rule[]>;
+  shareSnippet(
+    snippetId: string,
+    userId: string,
+    permissions?: Permission[] | Permission,
+  ): Promise<Snippet>;
 
   getTestCases(): Promise<TestCase[]>;
 
@@ -48,6 +52,10 @@ export interface SnippetOperations {
   testSnippet(testCase: Partial<TestCase>): Promise<TestCaseResult>;
 
   getFileTypes(): Promise<FileType[]>;
+
+  getFormatRules(): Promise<Rule[]>;
+
+  getLintingRules(): Promise<Rule[]>;
 
   modifyFormatRule(newRules: Rule[]): Promise<Rule[]>;
 

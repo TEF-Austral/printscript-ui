@@ -20,6 +20,7 @@ import ReadMoreIcon from '@mui/icons-material/ReadMore';
 import {queryClient} from "../App.tsx";
 import {DeleteConfirmationModal} from "../components/snippet-detail/DeleteConfirmationModal.tsx";
 import {useSnackbarContext} from "../contexts/snackbarContext.tsx";
+import { Permission } from "../utils/snippetOperations";
 
 type SnippetDetailProps = {
   id: string;
@@ -78,8 +79,8 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   }, [formatSnippetData])
 
 
-  async function handleShareSnippet(userId: string) {
-    shareSnippet({snippetId: id, userId})
+  async function handleShareSnippet(userId: string, permissions: Permission[] ) {
+    shareSnippet({snippetId: id, userId, permissions})
   }
 
   const handleLoadFromFile = async (target: EventTarget & HTMLInputElement) => {
@@ -189,4 +190,3 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
       </Box>
   );
 }
-
