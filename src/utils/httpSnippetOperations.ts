@@ -129,17 +129,17 @@ export class HttpSnippetOperations implements SnippetOperations {
     }
 
     const backendResponse = await this.request<BackendPaginatedUsers>(
-      `/api/authorization/api/users?${params.toString()}`,
+      `/api/users?${params.toString()}`,
     );
 
     const frontendUsers: User[] = backendResponse.users.map((backendUser) => ({
       id: backendUser.id,
-      name: backendUser.username || "Unknown",
+      name: backendUser.name ?? backendUser.username ?? "Usuario Desconocido",
     }));
 
     return {
       users: frontendUsers,
-      page: backendResponse.page + 1,
+      page: backendResponse.page + 1, // Convertir a 1-based
       page_size: backendResponse.pageSize,
       count: backendResponse.total,
     };
