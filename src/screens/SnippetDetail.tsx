@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import Editor from "react-simple-code-editor";
 import {highlight, languages} from "prismjs";
 import "prismjs/components/prism-clike";
@@ -11,7 +11,7 @@ import {
 } from "../utils/queries.tsx";
 import {useFormatSnippet, useGetSnippetById, useShareSnippet} from "../utils/queries.tsx";
 import {Bòx} from "../components/snippet-table/SnippetBox.tsx";
-import {BugReport, Delete, Download, Save, Share} from "@mui/icons-material";
+import {BugReport, Delete, Download, Save, Share, Upload} from "@mui/icons-material";
 import {ShareSnippetModal} from "../components/snippet-detail/ShareSnippetModal.tsx";
 import {TestSnippetModal} from "../components/snippet-test/TestSnippetModal.tsx";
 import {Snippet} from "../utils/snippet.ts";
@@ -19,6 +19,7 @@ import {SnippetExecution} from "./SnippetExecution.tsx";
 import ReadMoreIcon from '@mui/icons-material/ReadMore';
 import {queryClient} from "../App.tsx";
 import {DeleteConfirmationModal} from "../components/snippet-detail/DeleteConfirmationModal.tsx";
+import {useSnackbarContext} from "../contexts/snackbarContext.tsx";
 
 type SnippetDetailProps = {
   id: string;
@@ -56,11 +57,13 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   const [shareModalOppened, setShareModalOppened] = useState(false)
   const [deleteConfirmationModalOpen, setDeleteConfirmationModalOpen] = useState(false)
   const [testModalOpened, setTestModalOpened] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {data: snippet, isLoading} = useGetSnippetById(id);
   const {mutate: shareSnippet, isLoading: loadingShare} = useShareSnippet()
   const {mutate: formatSnippet, isLoading: isFormatLoading, data: formatSnippetData} = useFormatSnippet()
   const {mutate: updateSnippet, isLoading: isUpdateSnippetLoading} = useUpdateSnippetById({onSuccess: () => queryClient.invalidateQueries(['snippet', id])})
+  const {createSnackbar} = useSnackbarContext();
 
   useEffect(() => {
     if (snippet) {
@@ -78,6 +81,25 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   async function handleShareSnippet(userId: string) {
     shareSnippet({snippetId: id, userId})
   }
+
+  const handleLoadFromFile = async (target: EventTarget & HTMLInputElement) => {
+    const files = target.files;
+    if (!files || !files.length) {
+      createSnackbar('error', "Please select a file");
+      return;
+    }
+    const file = files[0];
+    try {
+      const text = await file.text();
+      setCode(text);
+      createSnackbar('success', "File loaded successfully");
+    } catch (e) {
+      console.error(e);
+      createSnackbar('error', "Error loading file");
+    } finally {
+      target.value = "";
+    }
+  };
 
   return (
       <Box p={4} minWidth={'60vw'}>
@@ -102,6 +124,11 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                 </IconButton>
               </Tooltip>
               <DownloadButton snippet={snippet}/>
+              <Tooltip title={"Load from file"}>
+                <IconButton onClick={() => fileInputRef?.current?.click()}>
+                  <Upload/>
+                </IconButton>
+              </Tooltip>
               {/*<Tooltip title={runSnippet ? "Stop run" : "Run"}>*/}
               {/*  <IconButton onClick={() => setRunSnippet(!runSnippet)}>*/}
               {/*    {runSnippet ? <StopRounded/> : <PlayArrow/>}*/}
@@ -151,6 +178,14 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                            onShare={handleShareSnippet}/>
         <TestSnippetModal open={testModalOpened} onClose={() => setTestModalOpened(false)}/>
         <DeleteConfirmationModal open={deleteConfirmationModalOpen} onClose={() => setDeleteConfirmationModalOpen(false)} id={snippet?.id ?? ""} setCloseDetails={handleCloseModal} />
+        <input
+          hidden
+          type="file"
+          ref={fileInputRef}
+          multiple={false}
+          data-testid="snippet-detail-upload-file-input"
+          onChange={(e) => handleLoadFromFile(e.target)}
+        />
       </Box>
   );
 }

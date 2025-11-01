@@ -1,4 +1,4 @@
-import {BACKEND_URL} from "../../src/utils/constants";
+import {SNIPPET_URL} from "../../src/utils/constants";
 
 describe('Add snippet tests', () => {
   beforeEach(() => {
@@ -9,7 +9,7 @@ describe('Add snippet tests', () => {
   })
   it('Can add snippets manually', () => {
     cy.visit("/")
-    cy.intercept('POST', BACKEND_URL+"/snippets", (req) => {
+    cy.intercept('POST', SNIPPET_URL+"/snippets", (req) => {
       req.reply((res) => {
         expect(res.body).to.include.keys("id","name","content","language")
         expect(res.statusCode).to.eq(200);
@@ -32,7 +32,7 @@ describe('Add snippet tests', () => {
 
   it('Can add snippets via file', () => {
     cy.visit("/")
-    cy.intercept('POST', BACKEND_URL+"/snippets", (req) => {
+    cy.intercept('POST', SNIPPET_URL+"/snippets", (req) => {
       req.reply((res) => {
         expect(res.body).to.include.keys("id","name","content","language")
         expect(res.statusCode).to.eq(200);

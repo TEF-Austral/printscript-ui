@@ -1,5 +1,6 @@
 import { SnippetOperations } from "./snippetOperations";
 import {
+  ComplianceEnum,
   CreateSnippet,
   PaginatedSnippets,
   Snippet,
@@ -9,17 +10,30 @@ import { FileType } from "../types/FileType";
 import { TestCase } from "../types/TestCase";
 import { Rule } from "../types/Rule";
 import { TestCaseResult } from "./queries";
-import { PaginatedUsers } from "./users";
-import { BACKEND_URL } from "./constants";
+import { BackendPaginatedUsers, PaginatedUsers, User } from "./users";
+import { AUTH_URL, SNIPPET_URL } from "./constants";
+import {
+  BackendPaginatedSnippets,
+  BackendSnippet,
+} from "../types/BackendSnippet.ts";
 
-// Minimal HTTP implementation using fetch. Adjust endpoints to match your backend API.
 export class HttpSnippetOperations implements SnippetOperations {
-  private base = BACKEND_URL;
+  private snippetUrl = SNIPPET_URL;
+  private authUrl = AUTH_URL;
+  private readonly getToken: () => Promise<string>;
+
+  constructor(getToken: () => Promise<string>) {
+    this.getToken = getToken;
+  }
 
   private async request<T>(path: string, opts: RequestInit = {}): Promise<T> {
-    const res = await fetch(`${this.base}${path}`, {
+    const token = await this.getToken();
+
+    const res = await fetch(`${this.snippetUrl}${path}`, {
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...opts.headers,
       },
       ...opts,
     });
@@ -38,9 +52,20 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async getSnippetById(id: string): Promise<Snippet | undefined> {
-    return this.request<Snippet | undefined>(
+    const response = await this.request<BackendSnippet>(
       `/snippets/${encodeURIComponent(id)}`,
     );
+    return this.mapBackendSnippetToSnippet(response);
+  }
+
+  private getExtensionFromLanguage(language: string): string {
+    const extensions: Record<string, string> = {
+      PRINTSCRIPT: "prs",
+      JAVA: "java",
+      PYTHON: "py",
+      GOLANG: "go",
+    };
+    return extensions[language.toUpperCase()] || "txt";
   }
 
   async listSnippetDescriptors(
@@ -52,7 +77,32 @@ export class HttpSnippetOperations implements SnippetOperations {
     params.set("page", String(page));
     params.set("pageSize", String(pageSize));
     if (snippetName) params.set("name", snippetName);
-    return this.request<PaginatedSnippets>(`/snippets?${params.toString()}`);
+
+    const raw = await this.request<BackendPaginatedSnippets | BackendSnippet[]>(
+      `/snippets?${params.toString()}`,
+    );
+
+    if (Array.isArray(raw)) {
+      const snippets = raw.map((s) => this.mapBackendSnippetToSnippet(s));
+
+      return {
+        page,
+        page_size: pageSize,
+        count: snippets.length,
+        snippets,
+      };
+    }
+
+    const mappedSnippets = raw.snippets.map((s: BackendSnippet) =>
+      this.mapBackendSnippetToSnippet(s),
+    );
+
+    return {
+      page: raw.page ?? page,
+      page_size: raw.pageSize ?? pageSize,
+      count: raw.count ?? mappedSnippets.length,
+      snippets: mappedSnippets,
+    };
   }
 
   async updateSnippetById(
@@ -66,16 +116,45 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async getUserFriends(
-    name = "",
+    email = "",
     page = 1,
     pageSize = 10,
   ): Promise<PaginatedUsers> {
     const params = new URLSearchParams({
-      name,
-      page: String(page),
+      page: String(page - 1),
       pageSize: String(pageSize),
     });
-    return this.request<PaginatedUsers>(`/users/friends?${params.toString()}`);
+
+    if (email) {
+      params.set("query", `email:"${email}"`);
+    }
+
+    const token = await this.getToken();
+    const res = await fetch(`${this.authUrl}/api/users?${params.toString()}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+
+    const backendResponse = (await res.json()) as BackendPaginatedUsers;
+
+    const frontendUsers: User[] = backendResponse.users.map((backendUser) => ({
+      id: backendUser.id,
+      name: backendUser.email ?? "Unknown",
+    }));
+
+    return {
+      users: frontendUsers,
+      page: backendResponse.page + 1,
+      page_size: backendResponse.pageSize,
+      count: backendResponse.total,
+    };
   }
 
   async shareSnippet(snippetId: string, userId: string): Promise<Snippet> {
@@ -97,9 +176,13 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async formatSnippet(snippetContent: string): Promise<string> {
-    const res = await fetch(`${this.base}/format`, {
+    const token = await this.getToken();
+    const res = await fetch(`${this.snippetUrl}/format`, {
       method: "POST",
-      headers: { "Content-Type": "text/plain" },
+      headers: {
+        "Content-Type": "text/plain",
+        Authorization: `Bearer ${token}`,
+      },
       body: snippetContent,
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -151,5 +234,19 @@ export class HttpSnippetOperations implements SnippetOperations {
       method: "PUT",
       body: JSON.stringify(newRules),
     });
+  }
+
+  private mapBackendSnippetToSnippet(backendSnippet: BackendSnippet): Snippet {
+    return {
+      id: String(backendSnippet.snippetId ?? "0"),
+      name: backendSnippet.name,
+      description: backendSnippet.description ?? "",
+      content: backendSnippet.content ?? "",
+      language: backendSnippet.language,
+      version: backendSnippet.version,
+      extension: this.getExtensionFromLanguage(backendSnippet.language),
+      compliance: (backendSnippet.compliance ?? "pending") as ComplianceEnum,
+      author: backendSnippet.author ?? "Unknown Author",
+    };
   }
 }

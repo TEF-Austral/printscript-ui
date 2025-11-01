@@ -24,7 +24,7 @@ export interface SnippetOperations {
   updateSnippetById(id: string, updateSnippet: UpdateSnippet): Promise<Snippet>;
 
   getUserFriends(
-    name?: string,
+    email?: string,
     page?: number,
     pageSize?: number,
   ): Promise<PaginatedUsers>;
