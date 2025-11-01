@@ -1,4 +1,4 @@
-import { BACKEND_URL, FRONTEND_URL} from "../../src/utils/constants"; //AUTH0_PASSWORD, AUTH0_USERNAME,
+import { SNIPPET_URL, FRONTEND_URL} from "../../src/utils/constants"; //AUTH0_PASSWORD, AUTH0_USERNAME,
 import {CreateSnippet} from "../../src/utils/snippet";
 
 describe('Home', () => {
@@ -41,7 +41,7 @@ describe('Home', () => {
       extension: ".ps"
     }
 
-    cy.intercept('GET', BACKEND_URL+"/snippets*", (req) => {
+    cy.intercept('GET', SNIPPET_URL+"/snippets*", (req) => {
       req.reply((res) => {
         expect(res.statusCode).to.eq(200);
       });

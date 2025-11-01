@@ -11,14 +11,15 @@ import { TestCase } from "../types/TestCase";
 import { Rule } from "../types/Rule";
 import { TestCaseResult } from "./queries";
 import { BackendPaginatedUsers, PaginatedUsers, User } from "./users";
-import { BACKEND_URL } from "./constants";
+import { AUTH_URL, SNIPPET_URL } from "./constants";
 import {
   BackendPaginatedSnippets,
   BackendSnippet,
 } from "../types/BackendSnippet.ts";
 
 export class HttpSnippetOperations implements SnippetOperations {
-  private base = BACKEND_URL;
+  private snippetUrl = SNIPPET_URL;
+  private authUrl = AUTH_URL;
   private readonly getToken: () => Promise<string>;
 
   constructor(getToken: () => Promise<string>) {
@@ -28,7 +29,7 @@ export class HttpSnippetOperations implements SnippetOperations {
   private async request<T>(path: string, opts: RequestInit = {}): Promise<T> {
     const token = await this.getToken();
 
-    const res = await fetch(`${this.base}${path}`, {
+    const res = await fetch(`${this.snippetUrl}${path}`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -128,9 +129,20 @@ export class HttpSnippetOperations implements SnippetOperations {
       params.set("query", `email:"${email}"`);
     }
 
-    const backendResponse = await this.request<BackendPaginatedUsers>(
-      `/api/users?${params.toString()}`,
-    );
+    const token = await this.getToken();
+    const res = await fetch(`${this.authUrl}/api/users?${params.toString()}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+
+    const backendResponse = (await res.json()) as BackendPaginatedUsers;
 
     const frontendUsers: User[] = backendResponse.users.map((backendUser) => ({
       id: backendUser.id,
@@ -139,7 +151,7 @@ export class HttpSnippetOperations implements SnippetOperations {
 
     return {
       users: frontendUsers,
-      page: backendResponse.page + 1, // Convertir a 1-based
+      page: backendResponse.page + 1,
       page_size: backendResponse.pageSize,
       count: backendResponse.total,
     };
@@ -165,7 +177,7 @@ export class HttpSnippetOperations implements SnippetOperations {
 
   async formatSnippet(snippetContent: string): Promise<string> {
     const token = await this.getToken();
-    const res = await fetch(`${this.base}/format`, {
+    const res = await fetch(`${this.snippetUrl}/format`, {
       method: "POST",
       headers: {
         "Content-Type": "text/plain",
