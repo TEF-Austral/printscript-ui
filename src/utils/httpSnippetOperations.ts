@@ -146,7 +146,7 @@ export class HttpSnippetOperations implements SnippetOperations {
 
     const frontendUsers: User[] = backendResponse.users.map((backendUser) => ({
       id: backendUser.id,
-      name: backendUser.name ?? backendUser.username ?? "Usuario Desconocido",
+      name: backendUser.email ?? "Unknown",
     }));
 
     return {
