@@ -163,7 +163,6 @@ export class HttpSnippetOperations implements SnippetOperations {
     userId: string,
     permissions?: SharePermissions,
   ): Promise<Snippet> {
-    // Map optional permissions to backend DTO defaults
     const payload = {
       userId,
       canRead: permissions?.canRead ?? true,
