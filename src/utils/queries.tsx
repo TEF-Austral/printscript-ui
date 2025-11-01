@@ -1,6 +1,6 @@
 import {useMutation, UseMutationResult, useQuery} from 'react-query';
 import {CreateSnippet, PaginatedSnippets, Snippet, UpdateSnippet} from './snippet.ts';
-import {SnippetOperations, Permission} from "./snippetOperations.ts";
+import {SnippetOperations} from "./snippetOperations.ts";
 import {PaginatedUsers} from "./users.ts";
 import {TestCase} from "../types/TestCase.ts";
 import {FileType} from "../types/FileType.ts";
@@ -83,7 +83,7 @@ export const useShareSnippet = () => {
     return useMutation<
         Snippet,
         Error,
-        { snippetId: string; userId: string; permissions?: Permission[] | Permission }
+        { snippetId: string; userId: string; permissions?: { canRead: boolean; canEdit: boolean } }
     >(
         ({snippetId, userId, permissions}) => snippetOperations.shareSnippet(snippetId, userId, permissions)
     );

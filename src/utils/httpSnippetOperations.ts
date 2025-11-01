@@ -1,4 +1,4 @@
-import { SnippetOperations, Permission } from "./snippetOperations";
+import { SnippetOperations, SharePermissions } from "./snippetOperations";
 import {
   ComplianceEnum,
   CreateSnippet,
@@ -161,13 +161,20 @@ export class HttpSnippetOperations implements SnippetOperations {
   async shareSnippet(
     snippetId: string,
     userId: string,
-    permissions?: Permission[] | Permission,
+    permissions?: SharePermissions,
   ): Promise<Snippet> {
+    // Map optional permissions to backend DTO defaults
+    const payload = {
+      userId,
+      canRead: permissions?.canRead ?? true,
+      canEdit: permissions?.canEdit ?? false,
+    };
+
     return this.request<Snippet>(
       `/snippets/${encodeURIComponent(snippetId)}/share`,
       {
         method: "POST",
-        body: JSON.stringify({ userId, permissions }),
+        body: JSON.stringify(payload),
       },
     );
   }

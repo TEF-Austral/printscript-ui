@@ -3,12 +3,12 @@ import {ModalWrapper} from "../common/ModalWrapper.tsx";
 import {useGetUsers} from "../../utils/queries.tsx";
 import {useEffect, useState} from "react";
 import {User} from "../../utils/users.ts";
-import { Permission } from "../../utils/snippetOperations";
+import { SharePermissions } from "../../utils/snippetOperations";
 
 type ShareSnippetModalProps = {
   open: boolean
   onClose: () => void
-  onShare: (userId: string, permissions: Permission[] ) => void
+  onShare: (userId: string, permissions: SharePermissions ) => void
   loading: boolean
 }
 export const ShareSnippetModal = (props: ShareSnippetModalProps) => {
@@ -18,7 +18,7 @@ export const ShareSnippetModal = (props: ShareSnippetModalProps) => {
   const {data, isLoading} = useGetUsers(debouncedName, 1, 5)
   const [selectedUser, setSelectedUser] = useState<User | undefined>()
   const [canRead, setCanRead] = useState(true)
-  const [canWrite, setCanWrite] = useState(false)
+  const [canEdit, setCanEdit] = useState(false)
 
   useEffect(() => {
     const getData = setTimeout(() => {
@@ -59,7 +59,7 @@ export const ShareSnippetModal = (props: ShareSnippetModalProps) => {
                 label="Read"
               />
               <FormControlLabel
-                control={<Checkbox checked={canWrite} onChange={(_, checked) => setCanWrite(checked)} />}
+                control={<Checkbox checked={canEdit} onChange={(_, checked) => setCanEdit(checked)} />}
                 label="Write"
               />
             </FormGroup>
@@ -67,12 +67,10 @@ export const ShareSnippetModal = (props: ShareSnippetModalProps) => {
           <Box mt={4} display={"flex"} width={"100%"} justifyContent={"flex-end"}>
             <Button onClick={onClose} variant={"outlined"}>Cancel</Button>
             <Button
-              disabled={!selectedUser || loading || !(canRead || canWrite)}
+              disabled={!selectedUser || loading || !(canRead || canEdit)}
               onClick={() => {
                 if (!selectedUser) return
-                const permissions: Permission[] = []
-                if (canRead) permissions.push("read")
-                if (canWrite) permissions.push("write")
+                const permissions: SharePermissions = { canRead, canEdit }
                 onShare(selectedUser.id, permissions)
               }}
               sx={{marginLeft: 2}}

@@ -14,6 +14,9 @@ import { Rule } from "../types/Rule.ts";
 // It's intentionally local to this interface file to avoid changing upstream types.
 export type Permission = "read" | "write";
 
+// New: SharePermissions matches the backend DTO expected by the server.
+export type SharePermissions = { canRead: boolean; canEdit: boolean };
+
 export interface SnippetOperations {
   listSnippetDescriptors(
     page: number,
@@ -36,7 +39,7 @@ export interface SnippetOperations {
   shareSnippet(
     snippetId: string,
     userId: string,
-    permissions?: Permission[] | Permission,
+    permissions?: SharePermissions,
   ): Promise<Snippet>;
 
   getTestCases(): Promise<TestCase[]>;
