@@ -42,7 +42,10 @@ export const ShareSnippetModal = (props: ShareSnippetModalProps) => {
               getOptionLabel={(option) => option.name}
               loading={isLoading}
               value={selectedUser}
-              onInputChange={(_: unknown, newValue: string | null) => newValue && setName(newValue)}
+              onInputChange={(_: unknown, newValue: string | null) => {
+                setName(newValue ?? "");
+                if (!newValue) setSelectedUser(undefined);
+              }}
               onChange={(_: unknown, newValue: User | null) => handleSelectUser(newValue)}
           />
           <Box mt={4} display={"flex"} width={"100%"} justifyContent={"flex-end"}>
