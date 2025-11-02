@@ -13,11 +13,22 @@ import { SnippetFilters } from "../types/SnippetFilter.types.ts";
 
 export type SharePermissions = { canRead: boolean; canEdit: boolean };
 
+export type LintViolation = {
+  message: string;
+  line: number;
+  column: number;
+};
+
+export type AnalyzeResult = {
+  isValid: boolean;
+  violations: LintViolation[];
+};
+
 export interface SnippetOperations {
   listSnippetDescriptors(
-    page: number,
-    pageSize: number,
-    filters: SnippetFilters,
+      page: number,
+      pageSize: number,
+      filters: SnippetFilters,
   ): Promise<PaginatedSnippets>;
 
   createSnippet(createSnippet: CreateSnippet): Promise<Snippet>;
@@ -27,20 +38,24 @@ export interface SnippetOperations {
   updateSnippetById(id: string, updateSnippet: UpdateSnippet): Promise<Snippet>;
 
   getUserFriends(
-    email?: string,
-    page?: number,
-    pageSize?: number,
+      email?: string,
+      page?: number,
+      pageSize?: number,
   ): Promise<PaginatedUsers>;
 
   shareSnippet(
-    snippetId: string,
-    userId: string,
-    permissions?: SharePermissions,
+      snippetId: string,
+      userId: string,
+      permissions?: SharePermissions,
   ): Promise<Snippet>;
 
   getTestCases(): Promise<TestCase[]>;
 
-  formatSnippet(snippet: string): Promise<string>;
+  // Updated signature - now takes snippetId and version
+  formatSnippet(snippetId: string, version: string): Promise<string>;
+
+  // New method for analyzing snippets
+  analyzeSnippet(snippetId: string, version: string): Promise<AnalyzeResult>;
 
   postTestCase(testCase: Partial<TestCase>): Promise<TestCase>;
 

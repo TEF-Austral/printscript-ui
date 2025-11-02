@@ -4,14 +4,14 @@ import {highlight, languages} from "prismjs";
 import "prismjs/components/prism-clike";
 import "prismjs/components/prism-javascript";
 import "prismjs/themes/prism-okaidia.css";
-import {Alert, Box, CircularProgress, IconButton, Tooltip, Typography} from "@mui/material";
+import {Alert, Box, CircularProgress, IconButton, Tooltip, Typography, Chip} from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import {
   useUpdateSnippetById
 } from "../utils/queries.tsx";
-import {useFormatSnippet, useGetSnippetById, useShareSnippet} from "../utils/queries.tsx";
+import {useFormatSnippet, useGetSnippetById, useShareSnippet, useAnalyzeSnippet} from "../utils/queries.tsx";
 import {Bòx} from "../components/snippet-table/SnippetBox.tsx";
-import {BugReport, Delete, Download, Save, Share, Upload} from "@mui/icons-material";
+import {BugReport, Delete, Download, Save, Share, Upload, CheckCircle} from "@mui/icons-material";
 import {ShareSnippetModal} from "../components/snippet-detail/ShareSnippetModal.tsx";
 import {TestSnippetModal} from "../components/snippet-test/TestSnippetModal.tsx";
 import {Snippet} from "../utils/snippet.ts";
@@ -32,38 +32,44 @@ const DownloadButton = ({snippet}: { snippet?: Snippet }) => {
   const file = new Blob([snippet.content], {type: 'text/plain'});
 
   return (
-    <Tooltip title={"Download"}>
-      <IconButton sx={{
-        cursor: "pointer"
-      }}>
-        <a download={`${snippet.name}.${snippet.extension}`} target="_blank"
-           rel="noreferrer" href={URL.createObjectURL(file)} style={{
-          textDecoration: "none",
-          color: "inherit",
-          display: 'flex',
-          alignItems: 'center',
+      <Tooltip title={"Download"}>
+        <IconButton sx={{
+          cursor: "pointer"
         }}>
-          <Download/>
-        </a>
-      </IconButton>
-    </Tooltip>
+          <a download={`${snippet.name}.${snippet.extension}`} target="_blank"
+             rel="noreferrer" href={URL.createObjectURL(file)} style={{
+            textDecoration: "none",
+            color: "inherit",
+            display: 'flex',
+            alignItems: 'center',
+          }}>
+            <Download/>
+          </a>
+        </IconButton>
+      </Tooltip>
   )
 }
 
 export const SnippetDetail = (props: SnippetDetailProps) => {
   const {id, handleCloseModal} = props;
-  const [code, setCode] = useState(
-      ""
-  );
-  const [shareModalOppened, setShareModalOppened] = useState(false)
-  const [deleteConfirmationModalOpen, setDeleteConfirmationModalOpen] = useState(false)
+  const [code, setCode] = useState("");
+  const [shareModalOppened, setShareModalOppened] = useState(false);
+  const [deleteConfirmationModalOpen, setDeleteConfirmationModalOpen] = useState(false);
   const [testModalOpened, setTestModalOpened] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {data: snippet, isLoading} = useGetSnippetById(id);
-  const {mutate: shareSnippet, isLoading: loadingShare} = useShareSnippet()
-  const {mutate: formatSnippet, isLoading: isFormatLoading, data: formatSnippetData} = useFormatSnippet()
-  const {mutate: updateSnippet, isLoading: isUpdateSnippetLoading} = useUpdateSnippetById({onSuccess: () => queryClient.invalidateQueries(['snippet', id])})
+  const {mutate: shareSnippet, isLoading: loadingShare} = useShareSnippet();
+
+  // Updated format hook - now uses snippetId and version
+  const {mutate: formatSnippet, isLoading: isFormatLoading, data: formatSnippetData} = useFormatSnippet();
+
+  // New analyze hook
+  const {mutate: analyzeSnippet, isLoading: isAnalyzeLoading, data: analyzeResult} = useAnalyzeSnippet();
+
+  const {mutate: updateSnippet, isLoading: isUpdateSnippetLoading} = useUpdateSnippetById({
+    onSuccess: () => queryClient.invalidateQueries(['snippet', id])
+  });
   const {createSnackbar} = useSnackbarContext();
 
   useEffect(() => {
@@ -74,13 +80,12 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
 
   useEffect(() => {
     if (formatSnippetData) {
-      setCode(formatSnippetData)
+      setCode(formatSnippetData);
     }
-  }, [formatSnippetData])
+  }, [formatSnippetData]);
 
-
-  async function handleShareSnippet(userId: string, permissions: SharePermissions ) {
-    shareSnippet({snippetId: id, userId, permissions})
+  async function handleShareSnippet(userId: string, permissions: SharePermissions) {
+    shareSnippet({snippetId: id, userId, permissions});
   }
 
   const handleLoadFromFile = async (target: EventTarget & HTMLInputElement) => {
@@ -100,6 +105,16 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
     } finally {
       target.value = "";
     }
+  };
+
+  const handleFormat = () => {
+    if (!snippet) return;
+    formatSnippet({ snippetId: id, version: snippet.version });
+  };
+
+  const handleAnalyze = () => {
+    if (!snippet) return;
+    analyzeSnippet({ snippetId: id, version: snippet.version });
   };
 
   return (
@@ -130,15 +145,14 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                   <Upload/>
                 </IconButton>
               </Tooltip>
-              {/*<Tooltip title={runSnippet ? "Stop run" : "Run"}>*/}
-              {/*  <IconButton onClick={() => setRunSnippet(!runSnippet)}>*/}
-              {/*    {runSnippet ? <StopRounded/> : <PlayArrow/>}*/}
-              {/*  </IconButton>*/}
-              {/*</Tooltip>*/}
-              {/* TODO: we can implement a live mode*/}
               <Tooltip title={"Format"}>
-                <IconButton onClick={() => formatSnippet(code)} disabled={isFormatLoading}>
+                <IconButton onClick={handleFormat} disabled={isFormatLoading}>
                   <ReadMoreIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={"Analyze"}>
+                <IconButton onClick={handleAnalyze} disabled={isAnalyzeLoading} color={analyzeResult?.isValid ? "success" : "default"}>
+                  <CheckCircle />
                 </IconButton>
               </Tooltip>
               <Tooltip title={"Save changes"}>
@@ -152,6 +166,33 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                 </IconButton>
               </Tooltip>
             </Box>
+
+            {/* Show analysis results */}
+            {analyzeResult && (
+                <Box mb={2}>
+                  {analyzeResult.isValid ? (
+                      <Alert severity="success">Code is valid and compliant!</Alert>
+                  ) : (
+                      <Alert severity="error">
+                        <Typography variant="subtitle2" fontWeight="bold">
+                          Found {analyzeResult.violations.length} issue(s):
+                        </Typography>
+                        {analyzeResult.violations.map((violation, idx) => (
+                            <Box key={idx} mt={1}>
+                              <Chip
+                                  label={`Line ${violation.line}, Col ${violation.column}`}
+                                  size="small"
+                                  color="error"
+                                  sx={{ mr: 1 }}
+                              />
+                              {violation.message}
+                            </Box>
+                        ))}
+                      </Alert>
+                  )}
+                </Box>
+            )}
+
             <Box display={"flex"} gap={2}>
               <Bòx flex={1} height={"fit-content"} overflow={"none"} minHeight={"500px"} bgcolor={'black'} color={'white'} code={code}>
                 <Editor
@@ -180,12 +221,12 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
         <TestSnippetModal open={testModalOpened} onClose={() => setTestModalOpened(false)}/>
         <DeleteConfirmationModal open={deleteConfirmationModalOpen} onClose={() => setDeleteConfirmationModalOpen(false)} id={snippet?.id ?? ""} setCloseDetails={handleCloseModal} />
         <input
-          hidden
-          type="file"
-          ref={fileInputRef}
-          multiple={false}
-          data-testid="snippet-detail-upload-file-input"
-          onChange={(e) => handleLoadFromFile(e.target)}
+            hidden
+            type="file"
+            ref={fileInputRef}
+            multiple={false}
+            data-testid="snippet-detail-upload-file-input"
+            onChange={(e) => handleLoadFromFile(e.target)}
         />
       </Box>
   );
