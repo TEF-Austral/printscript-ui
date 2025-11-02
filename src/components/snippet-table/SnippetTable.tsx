@@ -1,8 +1,4 @@
 import {
-  Box,
-  Button,
-  Menu,
-  MenuItem,
   styled,
   Table,
   TableBody,
@@ -11,14 +7,9 @@ import {
   TablePagination,
   TableRow
 } from "@mui/material";
-import { AddSnippetModal } from "./AddSnippetModal.tsx";
-import { useRef, useState } from "react";
-import { Add } from "@mui/icons-material";
 import { LoadingSnippetRow, SnippetRow } from "./SnippetRow.tsx";
-import { CreateSnippetWithLang, getFileLanguage, Snippet } from "../../utils/snippet.ts";
+import { Snippet } from "../../utils/snippet.ts";
 import { usePaginationContext } from "../../contexts/paginationContext.tsx";
-import { useSnackbarContext } from "../../contexts/snackbarContext.tsx";
-import { useGetFileTypes } from "../../utils/queries.tsx";
 
 type SnippetTableProps = {
   handleClickSnippet: (id: string) => void;
@@ -28,59 +19,10 @@ type SnippetTableProps = {
 
 export const SnippetTable = (props: SnippetTableProps) => {
   const { snippets, handleClickSnippet, loading } = props;
-  const [addModalOpened, setAddModalOpened] = useState(false);
-  const [popoverMenuOpened, setPopoverMenuOpened] = useState(false);
-  const [snippet, setSnippet] = useState<CreateSnippetWithLang | undefined>();
-
-  const popoverRef = useRef<HTMLButtonElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const { page, page_size: pageSize, count, handleChangePageSize, handleGoToPage } = usePaginationContext();
-  const { createSnackbar } = useSnackbarContext();
-  const { data: fileTypes } = useGetFileTypes();
-
-  const handleLoadSnippet = async (target: EventTarget & HTMLInputElement) => {
-    const files = target.files;
-    if (!files || !files.length) {
-      createSnackbar('error', "Please select at least one file");
-      return;
-    }
-    const file = files[0];
-    const splitName = file.name.split(".");
-    const fileType = getFileLanguage(fileTypes ?? [], splitName.at(-1));
-    if (!fileType) {
-      createSnackbar('error', `File type ${splitName.at(-1)} not supported`);
-      return;
-    }
-    file.text().then((text) => {
-      setSnippet({
-        name: splitName[0],
-        content: text,
-        language: fileType.language,
-        extension: fileType.extension,
-        description: "",
-        version: "1.0.0"
-      });
-    }).catch(e => {
-      console.error(e);
-    }).finally(() => {
-      setAddModalOpened(true);
-      target.value = "";
-    });
-  };
-
-  function handleClickMenu() {
-    setPopoverMenuOpened(false);
-  }
 
   return (
       <>
-        <Box display="flex" flexDirection="row" justifyContent="flex-end" mb={2}>
-          <Button ref={popoverRef} variant="contained" disableRipple sx={{ boxShadow: 0 }}
-                  onClick={() => setPopoverMenuOpened(true)}>
-            <Add />
-            Add Snippet
-          </Button>
-        </Box>
         <Table size="medium" sx={{ borderSpacing: "0 10px", borderCollapse: "separate" }}>
           <TableHead>
             <TableRow sx={{ fontWeight: 'bold' }}>
@@ -113,14 +55,6 @@ export const SnippetTable = (props: SnippetTableProps) => {
                            onPageChange={(_, page) => handleGoToPage(page)}
                            onRowsPerPageChange={e => handleChangePageSize(Number(e.target.value))} />
         </Table>
-        <AddSnippetModal defaultSnippet={snippet} open={addModalOpened}
-                         onClose={() => setAddModalOpened(false)} />
-        <Menu anchorEl={popoverRef.current} open={popoverMenuOpened} onClick={handleClickMenu}>
-          <MenuItem onClick={() => setAddModalOpened(true)}>Create snippet</MenuItem>
-          <MenuItem onClick={() => inputRef?.current?.click()}>Load snippet from file</MenuItem>
-        </Menu>
-        <input hidden type={"file"} ref={inputRef} multiple={false} data-testid={"upload-file-input"}
-               onChange={e => handleLoadSnippet(e?.target)} />
       </>
   );
 };

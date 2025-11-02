@@ -11,7 +11,7 @@ import {
     IconButton,
     Tooltip,
 } from "@mui/material";
-import { Clear, SwapVert } from "@mui/icons-material";
+import { Clear, ArrowUpward, ArrowDownward, Add } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import {
     SnippetFilters,
@@ -26,11 +26,13 @@ import { useGetFileTypes } from "../../utils/queries";
 interface SnippetFiltersComponentProps {
     filters: SnippetFilters;
     onFiltersChange: (filters: SnippetFilters) => void;
+    onAddSnippet?: () => void;
 }
 
 export const SnippetFiltersComponent = ({
                                             filters,
                                             onFiltersChange,
+                                            onAddSnippet,
                                         }: SnippetFiltersComponentProps) => {
     const [localFilters, setLocalFilters] = useState<SnippetFilters>(filters);
     const { data: fileTypes } = useGetFileTypes();
@@ -113,7 +115,7 @@ export const SnippetFiltersComponent = ({
         localFilters.sortOrder !== SortOrder.ASC;
 
     return (
-        <Box sx={{ mb: 3, p: 2, bgcolor: "background.paper", borderRadius: 1 }}>
+        <Box sx={{ mb: 3, p: 2, borderRadius: 1 }}>
             <Grid container spacing={2} alignItems="center">
                 <Grid item xs={12} sm={6} md={2}>
                     <FormControl fullWidth size="small">
@@ -195,24 +197,38 @@ export const SnippetFiltersComponent = ({
                         </FormControl>
                         <Tooltip title={`Sort ${localFilters.sortOrder === SortOrder.ASC ? 'Descending' : 'Ascending'}`}>
                             <IconButton onClick={toggleSortOrder} size="small">
-                                <SwapVert />
+                                {localFilters.sortOrder === SortOrder.ASC ? <ArrowUpward /> : <ArrowDownward />}
                             </IconButton>
                         </Tooltip>
                     </Box>
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={2}>
-                    {hasActiveFilters && (
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            startIcon={<Clear />}
-                            onClick={handleClearFilters}
-                            size="small"
-                        >
-                            Clear Filters
-                        </Button>
-                    )}
+                    <Box display="flex" gap={1} flexDirection="column">
+                        {hasActiveFilters && (
+                            <Button
+                                fullWidth
+                                variant="outlined"
+                                startIcon={<Clear />}
+                                onClick={handleClearFilters}
+                                size="small"
+                            >
+                                Clear Filters
+                            </Button>
+                        )}
+                        {onAddSnippet && (
+                            <Button
+                                fullWidth
+                                variant="contained"
+                                startIcon={<Add />}
+                                onClick={onAddSnippet}
+                                size="small"
+                                sx={{ boxShadow: 0 }}
+                            >
+                                Add Snippet
+                            </Button>
+                        )}
+                    </Box>
                 </Grid>
             </Grid>
         </Box>
