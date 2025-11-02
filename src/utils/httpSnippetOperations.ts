@@ -198,11 +198,6 @@ export class HttpSnippetOperations implements SnippetOperations {
     );
   }
 
-  /**
-   * Format a snippet using the printscript service
-   * @param snippetId - The ID of the snippet (used as the asset key)
-   * @param version - The version of the printscript language (e.g., "1.0", "1.1")
-   */
   async formatSnippet(snippetId: string, version: string): Promise<string> {
     const token = await this.getToken();
 
@@ -229,11 +224,6 @@ export class HttpSnippetOperations implements SnippetOperations {
     return res.text();
   }
 
-  /**
-   * Analyze a snippet using the printscript service
-   * @param snippetId - The ID of the snippet (used as the asset key)
-   * @param version - The version of the printscript language (e.g., "1.0", "1.1")
-   */
   async analyzeSnippet(
     snippetId: string,
     version: string,
