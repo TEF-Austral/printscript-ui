@@ -26,9 +26,9 @@ export type AnalyzeResult = {
 
 export interface SnippetOperations {
   listSnippetDescriptors(
-      page: number,
-      pageSize: number,
-      filters: SnippetFilters,
+    page: number,
+    pageSize: number,
+    filters: SnippetFilters,
   ): Promise<PaginatedSnippets>;
 
   createSnippet(createSnippet: CreateSnippet): Promise<Snippet>;
@@ -38,15 +38,15 @@ export interface SnippetOperations {
   updateSnippetById(id: string, updateSnippet: UpdateSnippet): Promise<Snippet>;
 
   getUserFriends(
-      email?: string,
-      page?: number,
-      pageSize?: number,
+    email?: string,
+    page?: number,
+    pageSize?: number,
   ): Promise<PaginatedUsers>;
 
   shareSnippet(
-      snippetId: string,
-      userId: string,
-      permissions?: SharePermissions,
+    snippetId: string,
+    userId: string,
+    permissions?: SharePermissions,
   ): Promise<Snippet>;
 
   getTestCases(): Promise<TestCase[]>;

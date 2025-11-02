@@ -1,4 +1,8 @@
-import { SnippetOperations, SharePermissions, AnalyzeResult } from "./snippetOperations";
+import {
+  SnippetOperations,
+  SharePermissions,
+  AnalyzeResult,
+} from "./snippetOperations";
 import {
   SnippetFilters,
   defaultFilters,
@@ -57,7 +61,7 @@ export class HttpSnippetOperations implements SnippetOperations {
 
   async getSnippetById(id: string): Promise<Snippet | undefined> {
     const response = await this.request<BackendSnippet>(
-        `/snippets/${encodeURIComponent(id)}`,
+      `/snippets/${encodeURIComponent(id)}`,
     );
     return this.mapBackendSnippetToSnippet(response);
   }
@@ -73,9 +77,9 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async listSnippetDescriptors(
-      page: number,
-      pageSize: number,
-      filters: SnippetFilters = defaultFilters,
+    page: number,
+    pageSize: number,
+    filters: SnippetFilters = defaultFilters,
   ): Promise<PaginatedSnippets> {
     const params = new URLSearchParams();
     params.set("page", String(page));
@@ -96,7 +100,7 @@ export class HttpSnippetOperations implements SnippetOperations {
     params.set("sortOrder", filters.sortOrder);
 
     const raw = await this.request<BackendPaginatedSnippets | BackendSnippet[]>(
-        `/snippets?${params.toString()}`,
+      `/snippets?${params.toString()}`,
     );
 
     if (Array.isArray(raw)) {
@@ -111,7 +115,7 @@ export class HttpSnippetOperations implements SnippetOperations {
     }
 
     const mappedSnippets = raw.snippets.map((s: BackendSnippet) =>
-        this.mapBackendSnippetToSnippet(s),
+      this.mapBackendSnippetToSnippet(s),
     );
 
     return {
@@ -123,8 +127,8 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async updateSnippetById(
-      id: string,
-      updateSnippet: UpdateSnippet,
+    id: string,
+    updateSnippet: UpdateSnippet,
   ): Promise<Snippet> {
     return this.request<Snippet>(`/snippets/${encodeURIComponent(id)}`, {
       method: "PUT",
@@ -133,9 +137,9 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async getUserFriends(
-      email = "",
-      page = 1,
-      pageSize = 10,
+    email = "",
+    page = 1,
+    pageSize = 10,
   ): Promise<PaginatedUsers> {
     const params = new URLSearchParams({
       page: String(page - 1),
@@ -175,9 +179,9 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async shareSnippet(
-      snippetId: string,
-      userId: string,
-      permissions?: SharePermissions,
+    snippetId: string,
+    userId: string,
+    permissions?: SharePermissions,
   ): Promise<Snippet> {
     const payload = {
       userId,
@@ -186,52 +190,12 @@ export class HttpSnippetOperations implements SnippetOperations {
     };
 
     return this.request<Snippet>(
-        `/snippets/${encodeURIComponent(snippetId)}/share`,
-        {
-          method: "POST",
-          body: JSON.stringify(payload),
-        },
+      `/snippets/${encodeURIComponent(snippetId)}/share`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
     );
-  }
-
-  async getFormatRules(): Promise<Rule[]> {
-    const token = await this.getToken();
-
-    const url = `${this.printscriptUrl}/config/format`;
-
-    const res = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`HTTP ${res.status}: ${txt}`);
-    }
-
-    return (await res.json()) as Rule[];
-  }
-
-  async getLintingRules(): Promise<Rule[]> {
-    const token = await this.getToken();
-
-    const url = `${this.printscriptUrl}/config/analyze`;
-
-    const res = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`HTTP ${res.status}: ${txt}`);
-    }
-
-    return (await res.json()) as Rule[];
   }
 
   /**
@@ -242,8 +206,6 @@ export class HttpSnippetOperations implements SnippetOperations {
   async formatSnippet(snippetId: string, version: string): Promise<string> {
     const token = await this.getToken();
 
-    // The printscript service expects container, key, and version as query params
-    // Using "snippets" as the container and snippetId as the key
     const params = new URLSearchParams({
       container: "snippets",
       key: snippetId,
@@ -272,7 +234,10 @@ export class HttpSnippetOperations implements SnippetOperations {
    * @param snippetId - The ID of the snippet (used as the asset key)
    * @param version - The version of the printscript language (e.g., "1.0", "1.1")
    */
-  async analyzeSnippet(snippetId: string, version: string): Promise<AnalyzeResult> {
+  async analyzeSnippet(
+    snippetId: string,
+    version: string,
+  ): Promise<AnalyzeResult> {
     const token = await this.getToken();
 
     const params = new URLSearchParams({
@@ -334,6 +299,46 @@ export class HttpSnippetOperations implements SnippetOperations {
     return this.request<FileType[]>(`/filetypes`);
   }
 
+  async getFormatRules(): Promise<Rule[]> {
+    const token = await this.getToken();
+
+    const url = `${this.printscriptUrl}/config/format`;
+
+    const res = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+
+    return (await res.json()) as Rule[];
+  }
+
+  async getLintingRules(): Promise<Rule[]> {
+    const token = await this.getToken();
+
+    const url = `${this.printscriptUrl}/config/analyze`;
+
+    const res = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+
+    return (await res.json()) as Rule[];
+  }
+
   async modifyFormatRule(newRules: Rule[]): Promise<Rule[]> {
     const token = await this.getToken();
 
@@ -389,7 +394,7 @@ export class HttpSnippetOperations implements SnippetOperations {
       extension: this.getExtensionFromLanguage(backendSnippet.language),
       compliance: backendSnippet.complianceStatus ?? "pending",
       complianceStatus:
-          backendSnippet.complianceStatus ?? backendSnippet.complianceStatus,
+        backendSnippet.complianceStatus ?? backendSnippet.complianceStatus,
       author: backendSnippet.author ?? "Unknown Author",
     };
   }
