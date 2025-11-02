@@ -1,5 +1,9 @@
 import { SnippetOperations, SharePermissions } from "./snippetOperations";
 import {
+  SnippetFilters,
+  defaultFilters,
+} from "../types/SnippetFilter.types.ts";
+import {
   ComplianceEnum,
   CreateSnippet,
   PaginatedSnippets,
@@ -72,12 +76,25 @@ export class HttpSnippetOperations implements SnippetOperations {
   async listSnippetDescriptors(
     page: number,
     pageSize: number,
-    snippetName?: string,
+    filters: SnippetFilters = defaultFilters,
   ): Promise<PaginatedSnippets> {
     const params = new URLSearchParams();
     params.set("page", String(page));
     params.set("pageSize", String(pageSize));
-    if (snippetName) params.set("name", snippetName);
+
+    params.set("ownership", filters.ownership);
+
+    if (filters.name) {
+      params.set("name", filters.name);
+    }
+
+    if (filters.language) {
+      params.set("language", filters.language);
+    }
+
+    params.set("compliance", filters.compliance);
+    params.set("sortBy", filters.sortBy);
+    params.set("sortOrder", filters.sortOrder);
 
     const raw = await this.request<BackendPaginatedSnippets | BackendSnippet[]>(
       `/snippets?${params.toString()}`,

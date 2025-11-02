@@ -9,6 +9,7 @@ import { TestCase } from "../types/TestCase.ts";
 import { TestCaseResult } from "./queries.tsx";
 import { FileType } from "../types/FileType.ts";
 import { Rule } from "../types/Rule.ts";
+import { SnippetFilters } from "../types/SnippetFilter.types.ts";
 
 export type SharePermissions = { canRead: boolean; canEdit: boolean };
 
@@ -16,7 +17,7 @@ export interface SnippetOperations {
   listSnippetDescriptors(
     page: number,
     pageSize: number,
-    sippetName?: string,
+    filters: SnippetFilters,
   ): Promise<PaginatedSnippets>;
 
   createSnippet(createSnippet: CreateSnippet): Promise<Snippet>;

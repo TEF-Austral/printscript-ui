@@ -10,6 +10,7 @@ import {useEffect} from "react";
 
 
 import {HttpSnippetOperations} from "./httpSnippetOperations.ts";
+import {defaultFilters, SnippetFilters} from "../types/SnippetFilter.types.ts";
 
 export const useSnippetsOperations = () => {
     const {getAccessTokenSilently} = useAuth0()
@@ -36,10 +37,17 @@ export const useSnippetsOperations = () => {
     return snippetOperations
 }
 
-export const useGetSnippets = (page: number = 0, pageSize: number = 10, snippetName?: string) => {
-    const snippetOperations = useSnippetsOperations()
+export const useGetSnippets = (
+    page: number = 0,
+    pageSize: number = 10,
+    filters: SnippetFilters = defaultFilters
+) => {
+    const snippetOperations = useSnippetsOperations();
 
-    return useQuery<PaginatedSnippets, Error>(['listSnippets', page, pageSize, snippetName], () => snippetOperations.listSnippetDescriptors(page, pageSize, snippetName));
+    return useQuery<PaginatedSnippets, Error>(
+        ['listSnippets', page, pageSize, filters],
+        () => snippetOperations.listSnippetDescriptors(page, pageSize, filters)
+    );
 };
 
 export const useGetSnippetById = (id: string) => {
