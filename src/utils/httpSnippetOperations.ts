@@ -23,7 +23,6 @@ import {
 export class HttpSnippetOperations implements SnippetOperations {
   private readonly snippetUrl = SNIPPET_URL;
   private readonly authUrl = AUTH_URL;
-  private readonly printScriptUrl = PRINTSCRIPT_URL;
   private readonly getToken: () => Promise<string>;
 
   constructor(getToken: () => Promise<string>) {
@@ -197,7 +196,7 @@ export class HttpSnippetOperations implements SnippetOperations {
   async getFormatRules(): Promise<Rule[]> {
     const token = await this.getToken();
 
-    const url = `${this.snippetUrl}/config/format`;
+    const url = `${PRINTSCRIPT_URL}/config/format`;
 
     const res = await fetch(url, {
       headers: {
@@ -217,7 +216,7 @@ export class HttpSnippetOperations implements SnippetOperations {
   async getLintingRules(): Promise<Rule[]> {
     const token = await this.getToken();
 
-    const url = `${this.snippetUrl}/config/analyze`;
+    const url = `${PRINTSCRIPT_URL}/config/analyze`;
 
     const res = await fetch(url, {
       headers: {
@@ -236,7 +235,7 @@ export class HttpSnippetOperations implements SnippetOperations {
 
   async formatSnippet(snippetContent: string): Promise<string> {
     const token = await this.getToken();
-    const res = await fetch(`${this.printScriptUrl}/format`, {
+    const res = await fetch(`${PRINTSCRIPT_URL}/format`, {
       method: "POST",
       headers: {
         "Content-Type": "text/plain",
