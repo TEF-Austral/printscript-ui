@@ -4,7 +4,6 @@ import {
   defaultFilters,
 } from "../types/SnippetFilter.types.ts";
 import {
-  ComplianceEnum,
   CreateSnippet,
   PaginatedSnippets,
   Snippet,
@@ -196,11 +195,43 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async getFormatRules(): Promise<Rule[]> {
-    return this.request<Rule[]>(`/rules/format`);
+    const token = await this.getToken();
+
+    const url = `${this.snippetUrl}/config/format`;
+
+    const res = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+
+    return (await res.json()) as Rule[];
   }
 
   async getLintingRules(): Promise<Rule[]> {
-    return this.request<Rule[]>(`/rules/lint`);
+    const token = await this.getToken();
+
+    const url = `${this.snippetUrl}/config/analyze`;
+
+    const res = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+
+    return (await res.json()) as Rule[];
   }
 
   async formatSnippet(snippetContent: string): Promise<string> {
@@ -276,11 +307,9 @@ export class HttpSnippetOperations implements SnippetOperations {
       language: backendSnippet.language,
       version: backendSnippet.version,
       extension: this.getExtensionFromLanguage(backendSnippet.language),
-      compliance: (backendSnippet.complianceStatus ??
-        "pending") as ComplianceEnum,
+      compliance: backendSnippet.complianceStatus ?? "pending",
       complianceStatus:
-        backendSnippet.complianceStatus ??
-        (backendSnippet.complianceStatus as any),
+        backendSnippet.complianceStatus ?? backendSnippet.complianceStatus,
       author: backendSnippet.author ?? "Unknown Author",
     };
   }
