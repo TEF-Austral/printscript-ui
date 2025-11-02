@@ -276,7 +276,11 @@ export class HttpSnippetOperations implements SnippetOperations {
       language: backendSnippet.language,
       version: backendSnippet.version,
       extension: this.getExtensionFromLanguage(backendSnippet.language),
-      compliance: (backendSnippet.compliance ?? "pending") as ComplianceEnum,
+      compliance: (backendSnippet.complianceStatus ??
+        "pending") as ComplianceEnum,
+      complianceStatus:
+        backendSnippet.complianceStatus ??
+        (backendSnippet.complianceStatus as any),
       author: backendSnippet.author ?? "Unknown Author",
     };
   }

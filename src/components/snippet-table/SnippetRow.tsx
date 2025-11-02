@@ -35,13 +35,35 @@ const StyledTableRow = styled(TableRow)(({theme}) => ({
 }));
 
 
+function formatCompliance(value: string | undefined) {
+  if (value == null) return '';
+  const v = String(value).toLowerCase();
+  switch (v) {
+    case 'pending':
+      return 'Compliance pending';
+    case 'compliant':
+      return 'Compliant';
+    case 'not-compliant':
+      return 'Not compliant';
+    case 'failed':
+      return 'Failed';
+    case 'true':
+      return 'Compliant';
+    case 'false':
+      return 'Not compliant';
+    default:
+      // try to make it readable
+      return String(value).replace(/(^|-)([a-z])/g, (m) => m.toUpperCase());
+  }
+}
+
 export const SnippetRow = ({snippet, onClick, ...props}: { snippet: Snippet, onClick: () => void } & TableRowProps) => {
   return (
       <StyledTableRow onClick={onClick} sx={{backgroundColor: 'white', border: 0, height: '75px'}} {...props}>
         <StyledTableCell>{snippet.name}</StyledTableCell>
         <StyledTableCell>{snippet.language}</StyledTableCell>
         <StyledTableCell>{snippet.author}</StyledTableCell>
-        <StyledTableCell>{snippet.compliance}</StyledTableCell>
+        <StyledTableCell>{formatCompliance(snippet.complianceStatus ?? snippet.compliance)}</StyledTableCell>
       </StyledTableRow>
   )
 }
@@ -57,4 +79,3 @@ export const LoadingSnippetRow = () => {
       </TableRow>
   )
 }
-

@@ -8,7 +8,7 @@ export type BackendSnippet = {
   language: string;
   version: string;
   author: string;
-  compliance?: ComplianceEnum;
+  complianceStatus?: ComplianceEnum;
 };
 
 export type BackendPaginatedSnippets = {
