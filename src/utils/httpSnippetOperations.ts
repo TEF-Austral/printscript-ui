@@ -18,7 +18,7 @@ import { TestCase } from "../types/TestCase";
 import { Rule } from "../types/Rule";
 import { TestCaseResult } from "./queries";
 import { BackendPaginatedUsers, PaginatedUsers, User } from "./users";
-import { AUTH_URL, SNIPPET_URL, PRINTSCRIPT_URL } from "./constants";
+import { AUTH_URL, SNIPPET_URL } from "./constants";
 import {
   BackendPaginatedSnippets,
   BackendSnippet,
@@ -27,7 +27,6 @@ import {
 export class HttpSnippetOperations implements SnippetOperations {
   private readonly snippetUrl = SNIPPET_URL;
   private readonly authUrl = AUTH_URL;
-  private readonly printscriptUrl = PRINTSCRIPT_URL;
   private readonly getToken: () => Promise<string>;
 
   constructor(getToken: () => Promise<string>) {
@@ -61,7 +60,7 @@ export class HttpSnippetOperations implements SnippetOperations {
 
   async getSnippetById(id: string): Promise<Snippet | undefined> {
     const response = await this.request<BackendSnippet>(
-      `/snippets/${encodeURIComponent(id)}`,
+        `/snippets/${encodeURIComponent(id)}`,
     );
     return this.mapBackendSnippetToSnippet(response);
   }
@@ -77,9 +76,9 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async listSnippetDescriptors(
-    page: number,
-    pageSize: number,
-    filters: SnippetFilters = defaultFilters,
+      page: number,
+      pageSize: number,
+      filters: SnippetFilters = defaultFilters,
   ): Promise<PaginatedSnippets> {
     const params = new URLSearchParams();
     params.set("page", String(page));
@@ -100,7 +99,7 @@ export class HttpSnippetOperations implements SnippetOperations {
     params.set("sortOrder", filters.sortOrder);
 
     const raw = await this.request<BackendPaginatedSnippets | BackendSnippet[]>(
-      `/snippets?${params.toString()}`,
+        `/snippets?${params.toString()}`,
     );
 
     if (Array.isArray(raw)) {
@@ -115,7 +114,7 @@ export class HttpSnippetOperations implements SnippetOperations {
     }
 
     const mappedSnippets = raw.snippets.map((s: BackendSnippet) =>
-      this.mapBackendSnippetToSnippet(s),
+        this.mapBackendSnippetToSnippet(s),
     );
 
     return {
@@ -127,8 +126,8 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async updateSnippetById(
-    id: string,
-    updateSnippet: UpdateSnippet,
+      id: string,
+      updateSnippet: UpdateSnippet,
   ): Promise<Snippet> {
     return this.request<Snippet>(`/snippets/${encodeURIComponent(id)}`, {
       method: "PUT",
@@ -137,9 +136,9 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async getUserFriends(
-    email = "",
-    page = 1,
-    pageSize = 10,
+      email = "",
+      page = 1,
+      pageSize = 10,
   ): Promise<PaginatedUsers> {
     const params = new URLSearchParams({
       page: String(page - 1),
@@ -179,9 +178,9 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async shareSnippet(
-    snippetId: string,
-    userId: string,
-    permissions?: SharePermissions,
+      snippetId: string,
+      userId: string,
+      permissions?: SharePermissions,
   ): Promise<Snippet> {
     const payload = {
       userId,
@@ -190,30 +189,37 @@ export class HttpSnippetOperations implements SnippetOperations {
     };
 
     return this.request<Snippet>(
-      `/snippets/${encodeURIComponent(snippetId)}/share`,
-      {
-        method: "POST",
-        body: JSON.stringify(payload),
-      },
+        `/snippets/${encodeURIComponent(snippetId)}/share`,
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        },
     );
   }
 
+  // Updated: Now calls snippet service which handles authorization
   async formatSnippet(snippetId: string, version: string): Promise<string> {
     const token = await this.getToken();
 
     const params = new URLSearchParams({
-      container: "snippets",
-      key: snippetId,
+      snippetId: snippetId,
       version: version,
     });
 
-    const url = `${this.printscriptUrl}/format/preview?${params.toString()}`;
+    const url = `${this.snippetUrl}/format/preview?${params.toString()}`;
 
     const res = await fetch(url, {
       method: "POST",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({
+        spaceBeforeColon: true,
+        spaceAfterColon: true,
+        spacesInAssignation: 1,
+        newLineBeforePrintln: 1,
+      }),
     });
 
     if (!res.ok) {
@@ -224,19 +230,19 @@ export class HttpSnippetOperations implements SnippetOperations {
     return res.text();
   }
 
+  // Updated: Now calls snippet service which handles authorization
   async analyzeSnippet(
-    snippetId: string,
-    version: string,
+      snippetId: string,
+      version: string,
   ): Promise<AnalyzeResult> {
     const token = await this.getToken();
 
     const params = new URLSearchParams({
-      container: "snippets",
-      key: snippetId,
+      snippetId: snippetId,
       version: version,
     });
 
-    const url = `${this.printscriptUrl}/analyze?${params.toString()}`;
+    const url = `${this.snippetUrl}/analyze?${params.toString()}`;
 
     const res = await fetch(url, {
       method: "GET",
@@ -289,88 +295,30 @@ export class HttpSnippetOperations implements SnippetOperations {
     return this.request<FileType[]>(`/filetypes`);
   }
 
+  // Updated: Now calls snippet service which proxies to printscript service
   async getFormatRules(): Promise<Rule[]> {
-    const token = await this.getToken();
-
-    const url = `${this.printscriptUrl}/config/format`;
-
-    const res = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`HTTP ${res.status}: ${txt}`);
-    }
-
-    return (await res.json()) as Rule[];
+    return this.request<Rule[]>(`/config/format`);
   }
 
+  // Updated: Now calls snippet service which proxies to printscript service
   async getLintingRules(): Promise<Rule[]> {
-    const token = await this.getToken();
-
-    const url = `${this.printscriptUrl}/config/analyze`;
-
-    const res = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`HTTP ${res.status}: ${txt}`);
-    }
-
-    return (await res.json()) as Rule[];
+    return this.request<Rule[]>(`/config/analyze`);
   }
 
+  // Updated: Now calls snippet service which proxies to printscript service
   async modifyFormatRule(newRules: Rule[]): Promise<Rule[]> {
-    const token = await this.getToken();
-
-    const url = `${this.printscriptUrl}/config/format`;
-
-    const res = await fetch(url, {
+    return this.request<Rule[]>(`/config/format`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify({ rules: newRules }),
     });
-
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`HTTP ${res.status}: ${txt}`);
-    }
-
-    return (await res.json()) as Rule[];
   }
 
+  // Updated: Now calls snippet service which proxies to printscript service
   async modifyLintingRule(newRules: Rule[]): Promise<Rule[]> {
-    const token = await this.getToken();
-
-    const url = `${this.printscriptUrl}/config/analyze`;
-
-    const res = await fetch(url, {
+    return this.request<Rule[]>(`/config/analyze`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify({ rules: newRules }),
     });
-
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`HTTP ${res.status}: ${txt}`);
-    }
-
-    return (await res.json()) as Rule[];
   }
 
   private mapBackendSnippetToSnippet(backendSnippet: BackendSnippet): Snippet {
@@ -384,7 +332,7 @@ export class HttpSnippetOperations implements SnippetOperations {
       extension: this.getExtensionFromLanguage(backendSnippet.language),
       compliance: backendSnippet.complianceStatus ?? "pending",
       complianceStatus:
-        backendSnippet.complianceStatus ?? backendSnippet.complianceStatus,
+          backendSnippet.complianceStatus ?? backendSnippet.complianceStatus,
       author: backendSnippet.author ?? "Unknown Author",
     };
   }
