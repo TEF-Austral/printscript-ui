@@ -197,7 +197,6 @@ export class HttpSnippetOperations implements SnippetOperations {
     );
   }
 
-  // Updated: Now calls snippet service which handles authorization
   async formatSnippet(snippetId: string, version: string): Promise<string> {
     const token = await this.getToken();
 
@@ -230,7 +229,6 @@ export class HttpSnippetOperations implements SnippetOperations {
     return res.text();
   }
 
-  // Updated: Now calls snippet service which handles authorization
   async analyzeSnippet(
       snippetId: string,
       version: string,
@@ -278,7 +276,7 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async testSnippet(testCase: Partial<TestCase>): Promise<TestCaseResult> {
-    return this.request<TestCaseResult>(`/test`, {
+    return this.request<TestCaseResult>(`/tests/execute`, {
       method: "POST",
       body: JSON.stringify(testCase),
     });
@@ -295,27 +293,23 @@ export class HttpSnippetOperations implements SnippetOperations {
     return this.request<FileType[]>(`/filetypes`);
   }
 
-  // Updated: Now calls snippet service which proxies to printscript service
   async getFormatRules(): Promise<Rule[]> {
     return this.request<Rule[]>(`/config/format`);
   }
 
-  // Updated: Now calls snippet service which proxies to printscript service
   async getLintingRules(): Promise<Rule[]> {
     return this.request<Rule[]>(`/config/analyze`);
   }
 
-  // Updated: Now calls snippet service which proxies to printscript service
   async modifyFormatRule(newRules: Rule[]): Promise<Rule[]> {
-    return this.request<Rule[]>(`/config/format`, {
+    return this.request<Rule[]>(`/config/update/format`, {
       method: "PUT",
       body: JSON.stringify({ rules: newRules }),
     });
   }
 
-  // Updated: Now calls snippet service which proxies to printscript service
   async modifyLintingRule(newRules: Rule[]): Promise<Rule[]> {
-    return this.request<Rule[]>(`/config/analyze`, {
+    return this.request<Rule[]>(`/config/update/analyze`, {
       method: "PUT",
       body: JSON.stringify({ rules: newRules }),
     });
