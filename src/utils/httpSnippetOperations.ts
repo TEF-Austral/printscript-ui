@@ -315,10 +315,10 @@ export class HttpSnippetOperations implements SnippetOperations {
     return this.request<FileType[]>(`/filetypes`);
   }
 
-  async getFormatRules(): Promise<Rule[]> {
+  private async _getRules(ruleType: "format" | "analyze"): Promise<Rule[]> {
     const token = await this.getToken();
 
-    const url = `${this.printscriptUrl}/config/format`;
+    const url = `${this.printscriptUrl}/config/${ruleType}`;
 
     const res = await fetch(url, {
       headers: {
@@ -329,44 +329,53 @@ export class HttpSnippetOperations implements SnippetOperations {
 
     if (!res.ok) {
       const txt = await res.text();
-      throw new Error(`HTTP ${res.status}: ${txt}`);
+      throw new Error(
+          `Failed to get ${ruleType} rules - HTTP ${res.status}: ${txt}`,
+      );
     }
 
     return (await res.json()) as Rule[];
   }
 
+  async getFormatRules(): Promise<Rule[]> {
+    return this._getRules("format");
+  }
+
   async getLintingRules(): Promise<Rule[]> {
+    return this._getRules("analyze");
+  }
+
+  private async _modifyRule(
+      newRules: Rule[],
+      ruleType: "format" | "analyze",
+  ): Promise<Rule[]> {
     const token = await this.getToken();
-
-    const url = `${this.printscriptUrl}/config/analyze`;
-
+    const url = `${this.printscriptUrl}/config/update/${ruleType}`;
     const res = await fetch(url, {
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({ rules: newRules }),
     });
 
     if (!res.ok) {
       const txt = await res.text();
-      throw new Error(`HTTP ${res.status}: ${txt}`);
+      throw new Error(
+          `Failed to update ${ruleType} rules - HTTP ${res.status}: ${txt}`,
+      );
     }
 
     return (await res.json()) as Rule[];
   }
 
   async modifyFormatRule(newRules: Rule[]): Promise<Rule[]> {
-    return this.request<Rule[]>(`/config/update/format`, {
-      method: "PUT",
-      body: JSON.stringify({ rules: newRules }),
-    });
+    return this._modifyRule(newRules, "format");
   }
 
   async modifyLintingRule(newRules: Rule[]): Promise<Rule[]> {
-    return this.request<Rule[]>(`/config/update/analyze`, {
-      method: "PUT",
-      body: JSON.stringify({ rules: newRules }),
-    });
+    return this._modifyRule(newRules, "analyze");
   }
 
   private mapBackendSnippetToSnippet(backendSnippet: BackendSnippet): Snippet {
