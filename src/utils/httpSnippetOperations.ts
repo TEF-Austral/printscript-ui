@@ -27,6 +27,7 @@ import {
 export class HttpSnippetOperations implements SnippetOperations {
   private readonly snippetUrl = SNIPPET_URL;
   private readonly authUrl = AUTH_URL;
+  private readonly printscriptUrl = PRINTSCRIPT_URL;
   private readonly getToken: () => Promise<string>;
 
   constructor(getToken: () => Promise<string>) {
@@ -305,11 +306,43 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async getFormatRules(): Promise<Rule[]> {
-    return this.request<Rule[]>(`/config/format`);
+    const token = await this.getToken();
+
+    const url = `${this.printscriptUrl}/config/format`;
+
+    const res = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+
+    return (await res.json()) as Rule[];
   }
 
   async getLintingRules(): Promise<Rule[]> {
-    return this.request<Rule[]>(`/config/analyze`);
+    const token = await this.getToken();
+
+    const url = `${this.printscriptUrl}/config/analyze`;
+
+    const res = await fetch(url, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+
+    return (await res.json()) as Rule[];
   }
 
   async modifyFormatRule(newRules: Rule[]): Promise<Rule[]> {
