@@ -127,8 +127,13 @@ export type TestCaseResult = "success" | "fail"
 export const useTestSnippet = () => {
     const snippetOperations = useSnippetsOperations()
 
-    return useMutation<TestCaseResult, Error, Partial<TestCase>>(
-        (tc) => snippetOperations.testSnippet(tc)
+    return useMutation<
+        TestCaseResult,
+        Error,
+        { snippetId: string; version: string; testId: number }
+    >(
+        ({ snippetId, version, testId }) =>
+            snippetOperations.testSnippet(snippetId, version, testId)
     )
 }
 

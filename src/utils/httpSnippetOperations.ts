@@ -275,10 +275,21 @@ export class HttpSnippetOperations implements SnippetOperations {
     return id;
   }
 
-  async testSnippet(testCase: Partial<TestCase>): Promise<TestCaseResult> {
+  async testSnippet(
+      snippetId: string,
+      version: string,
+      testId: number,
+  ): Promise<TestCaseResult> {
     return this.request<TestCaseResult>(`/tests/execute`, {
       method: "POST",
-      body: JSON.stringify(testCase),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        snippetId: parseInt(snippetId),
+        version: version,
+        testId: testId,
+      }),
     });
   }
 

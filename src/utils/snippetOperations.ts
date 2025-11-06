@@ -63,7 +63,11 @@ export interface SnippetOperations {
 
   deleteSnippet(id: string): Promise<string>;
 
-  testSnippet(testCase: Partial<TestCase>): Promise<TestCaseResult>;
+  testSnippet(
+      snippetId: string,
+      version: string,
+      testId: number,
+  ): Promise<TestCaseResult>;
 
   getFileTypes(): Promise<FileType[]>;
 
