@@ -18,7 +18,7 @@ import { TestCase } from "../types/TestCase";
 import { Rule } from "../types/Rule";
 import { TestCaseResult } from "./queries";
 import { BackendPaginatedUsers, PaginatedUsers, User } from "./users";
-import { AUTH_URL, SNIPPET_URL } from "./constants";
+import {AUTH_URL, PRINTSCRIPT_URL, SNIPPET_URL} from "./constants";
 import {
   BackendPaginatedSnippets,
   BackendSnippet,
