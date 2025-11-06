@@ -9,9 +9,11 @@ import {queryClient} from "../../App.tsx";
 type TestSnippetModalProps = {
     open: boolean
     onClose: () => void
+    snippetId: string
+    version: string
 }
 
-export const TestSnippetModal = ({open, onClose}: TestSnippetModalProps) => {
+export const TestSnippetModal = ({open, onClose, snippetId, version}: TestSnippetModalProps) => {
     const [value, setValue] = useState(0);
 
     const {data: testCases} = useGetTestCases();
@@ -45,13 +47,23 @@ export const TestSnippetModal = ({open, onClose}: TestSnippetModalProps) => {
                     </IconButton>
                 </Tabs>
                 {testCases?.map((testCase, index) => (
-                    <TabPanel index={index} value={value} test={testCase}
-                              setTestCase={(tc) => postTestCase(tc)}
-                              removeTestCase={(i) => removeTestCase(i)}
+                    <TabPanel
+                        key={testCase.id}
+                        index={index}
+                        value={value}
+                        test={testCase}
+                        snippetId={snippetId}
+                        version={version}
+                        setTestCase={(tc) => postTestCase(tc)}
+                        removeTestCase={(i) => removeTestCase(i)}
                     />
                 ))}
-                <TabPanel index={(testCases?.length ?? 0) + 1} value={value}
-                          setTestCase={(tc) => postTestCase(tc)}
+                <TabPanel
+                    index={(testCases?.length ?? 0) + 1}
+                    value={value}
+                    snippetId={snippetId}
+                    version={version}
+                    setTestCase={(tc) => postTestCase(tc)}
                 />
             </Box>
         </ModalWrapper>
