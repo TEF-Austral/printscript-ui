@@ -49,12 +49,10 @@ export interface SnippetOperations {
     permissions?: SharePermissions,
   ): Promise<Snippet>;
 
-  getTestCases(): Promise<TestCase[]>;
+  getTestCases(snippetId: string): Promise<TestCase[]>;
 
-  // Updated signature - now takes snippetId and version
   formatSnippet(snippetId: string, version: string): Promise<string>;
 
-  // New method for analyzing snippets
   analyzeSnippet(snippetId: string, version: string): Promise<AnalyzeResult>;
 
   postTestCase(testCase: Partial<TestCase>): Promise<TestCase>;

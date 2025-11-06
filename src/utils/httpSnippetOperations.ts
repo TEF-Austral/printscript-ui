@@ -258,8 +258,18 @@ export class HttpSnippetOperations implements SnippetOperations {
     return (await res.json()) as AnalyzeResult;
   }
 
-  async getTestCases(): Promise<TestCase[]> {
-    return this.request<TestCase[]>(`/testcases`);
+  async getTestCases(snippetId: string): Promise<TestCase[]> {
+    const params = new URLSearchParams();
+    params.set("snippetId", snippetId);
+
+    const raw = await this.request<any[]>(`/testcases?${params.toString()}`);
+    return raw.map(t => ({
+      id: String(t.id ?? ''),
+      snippetId: t.snippetId,
+      name: t.name,
+      inputs: t.inputs || [],
+      expectedOutputs: t.expectedOutputs || []
+    }));
   }
 
   async postTestCase(testCase: TestCase): Promise<TestCase> {

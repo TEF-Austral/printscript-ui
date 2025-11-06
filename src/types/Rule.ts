@@ -1,5 +1,5 @@
 export type Rule = {
-  id: string;
+  id: number | null;
   name: string;
   isActive: boolean;
   value?: string | number | null;

@@ -16,7 +16,7 @@ type TestSnippetModalProps = {
 export const TestSnippetModal = ({open, onClose, snippetId, version}: TestSnippetModalProps) => {
     const [value, setValue] = useState(0);
 
-    const {data: testCases} = useGetTestCases();
+    const {data: testCases} = useGetTestCases(snippetId);
     const {mutateAsync: postTestCase} = usePostTestCase();
     const {mutateAsync: removeTestCase} = useRemoveTestCase({
         onSuccess: () => queryClient.invalidateQueries('testCases')
