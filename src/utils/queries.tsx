@@ -6,7 +6,7 @@ import {TestCase} from "../types/TestCase.ts";
 import {FileType} from "../types/FileType.ts";
 import {Rule} from "../types/Rule.ts";
 import {useAuth0} from "@auth0/auth0-react";
-import {useEffect} from "react";
+//import {useEffect} from "react";
 
 import {HttpSnippetOperations} from "./httpSnippetOperations.ts";
 import {defaultFilters, SnippetFilters} from "../types/SnippetFilter.types.ts";
@@ -14,13 +14,13 @@ import {defaultFilters, SnippetFilters} from "../types/SnippetFilter.types.ts";
 export const useSnippetsOperations = () => {
     const {getAccessTokenSilently} = useAuth0()
 
-    useEffect(() => {
-        getAccessTokenSilently()
-            .then(token => {
-                console.log(token)
-            })
-            .catch(error => console.error(error));
-    });
+    // useEffect(() => {
+    //     getAccessTokenSilently()
+    //         .then(token => {
+    //             console.log(token)
+    //         })
+    //         .catch(error => console.error(error));
+    // });
 
     const snippetOperations: SnippetOperations = new HttpSnippetOperations(
         async () => {
