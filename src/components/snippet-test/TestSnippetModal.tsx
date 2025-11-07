@@ -1,4 +1,4 @@
-import {Box,  Divider, IconButton, Tab, Tabs, Typography} from "@mui/material";
+import {Box,  Divider, Tab, Tabs, Typography} from "@mui/material";
 import {ModalWrapper} from "../common/ModalWrapper.tsx";
 import {SyntheticEvent, useState} from "react";
 import {AddRounded} from "@mui/icons-material";
@@ -40,11 +40,9 @@ export const TestSnippetModal = ({open, onClose, snippetId, version}: TestSnippe
                     sx={{borderRight: 1, borderColor: 'divider'}}
                 >
                     {testCases?.map((testCase) => (
-                        <Tab label={testCase.name}/>
+                        <Tab key={testCase.id} label={testCase.name}/>
                     ))}
-                    <IconButton disableRipple onClick={() => setValue((testCases?.length ?? 0) + 1)}>
-                        <AddRounded />
-                    </IconButton>
+                    <Tab icon={<AddRounded />} onClick={() => setValue((testCases?.length ?? 0) + 1)} />
                 </Tabs>
                 {testCases?.map((testCase, index) => (
                     <TabPanel

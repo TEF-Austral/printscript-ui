@@ -291,9 +291,19 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async removeTestCase(id: string): Promise<string> {
-    await this.request(`/testcases/${encodeURIComponent(id)}`, {
+    const token = await this.getToken();
+    const res = await fetch(`${this.snippetUrl}/testcases/${encodeURIComponent(id)}`, {
       method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
     return id;
   }
 
