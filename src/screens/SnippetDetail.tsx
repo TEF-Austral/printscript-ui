@@ -21,6 +21,7 @@ import {queryClient} from "../App.tsx";
 import {DeleteConfirmationModal} from "../components/snippet-detail/DeleteConfirmationModal.tsx";
 import {useSnackbarContext} from "../contexts/snackbarContext.tsx";
 import { SharePermissions } from "../utils/snippetOperations";
+import {useSnippetsOperations} from "../utils/queries.tsx";
 
 type SnippetDetailProps = {
   id: string;
@@ -56,15 +57,16 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   const [shareModalOppened, setShareModalOppened] = useState(false);
   const [deleteConfirmationModalOpen, setDeleteConfirmationModalOpen] = useState(false);
   const [testModalOpened, setTestModalOpened] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const snippetOperations = useSnippetsOperations();
 
   const {data: snippet, isLoading} = useGetSnippetById(id);
   const {mutate: shareSnippet, isLoading: loadingShare} = useShareSnippet();
 
-  // Updated format hook - now uses snippetId and version
   const {mutate: formatSnippet, isLoading: isFormatLoading, data: formatSnippetData} = useFormatSnippet();
 
-  // New analyze hook
   const {mutate: analyzeSnippet, isLoading: isAnalyzeLoading, data: analyzeResult} = useAnalyzeSnippet();
 
   const {mutate: updateSnippet, isLoading: isUpdateSnippetLoading} = useUpdateSnippetById({
@@ -117,6 +119,46 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
     analyzeSnippet({ snippetId: id, version: snippet.version });
   };
 
+  const validateCode = async (content: string): Promise<boolean> => {
+    if (!content.trim()) {
+      setError("Code cannot be empty");
+      return false;
+    }
+
+    setIsValidating(true);
+    setError(null);
+
+    try {
+      const result = await snippetOperations.compileSnippet(id, snippet?.version ?? "1.0");
+
+      if (!result.isValid) {
+        const errorMessages = result.violations.map(v =>
+            `Line ${v.line}, Col ${v.column}: ${v.message}`
+        ).join('\n');
+        setError(`Code does not parse:\n${errorMessages}`);
+        createSnackbar('error', 'Code does not parse');
+        return false;
+      }
+
+      return true;
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to validate code';
+      setError(errorMessage);
+      createSnackbar('error', errorMessage);
+      return false;
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const handleSave = async () => {
+    const isValid = await validateCode(code);
+    if (!isValid) return;
+
+    updateSnippet({id: id, updateSnippet: {content: code}});
+    setError(null);
+  };
+
   return (
       <Box p={4} minWidth={'60vw'}>
         <Box width={'100%'} p={2} display={'flex'} justifyContent={'flex-end'}>
@@ -156,8 +198,12 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                 </IconButton>
               </Tooltip>
               <Tooltip title={"Save changes"}>
-                <IconButton color={"primary"} onClick={() => updateSnippet({id: id, updateSnippet: {content: code}})} disabled={isUpdateSnippetLoading || snippet?.content === code} >
-                  <Save />
+                <IconButton
+                    color={"primary"}
+                    onClick={handleSave}
+                    disabled={isUpdateSnippetLoading || isValidating || snippet?.content === code}
+                >
+                  {isValidating ? <CircularProgress size={24} /> : <Save />}
                 </IconButton>
               </Tooltip>
               <Tooltip title={"Delete"}>
@@ -167,7 +213,12 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
               </Tooltip>
             </Box>
 
-            {/* Show analysis results */}
+            {error && (
+                <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+                  {error}
+                </Alert>
+            )}
+
             {analyzeResult && (
                 <Box mb={2}>
                   {analyzeResult.isValid ? (

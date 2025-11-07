@@ -24,6 +24,7 @@ import {ModalWrapper} from "../common/ModalWrapper.tsx";
 import {useCreateSnippet, useGetFileTypes} from "../../utils/queries.tsx";
 import {queryClient} from "../../App.tsx";
 import {useSnackbarContext} from "../../contexts/snackbarContext.tsx";
+import {useSnippetsOperations} from "../../utils/queries.tsx";
 
 export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     open: boolean,
@@ -36,7 +37,9 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     const [description, setDescription] = useState("")
     const [version, setVersion] = useState("1.0")
     const [error, setError] = useState<string | null>(null);
+    const [isValidating, setIsValidating] = useState(false);
     const {createSnackbar} = useSnackbarContext();
+    const snippetOperations = useSnippetsOperations();
 
     const {mutateAsync: createSnippet, isLoading: loadingSnippet} = useCreateSnippet({
         onSuccess: () => {
@@ -47,7 +50,53 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     })
     const {data: fileTypes} = useGetFileTypes();
 
+    const validateCode = async (content: string): Promise<boolean> => {
+        if (!content.trim()) {
+            setError("Code cannot be empty");
+            return false;
+        }
+
+        setIsValidating(true);
+        setError(null);
+
+        try {
+            const tempSnippet = await createSnippet({
+                name: `temp_${Date.now()}`,
+                content: content,
+                language: language,
+                description: "temp",
+                version: version,
+                extension: fileTypes?.find((f) => f.language === language)?.extension ?? "prs"
+            });
+
+            const result = await snippetOperations.compileSnippet(tempSnippet.id, version);
+
+            await snippetOperations.deleteSnippet(tempSnippet.id);
+
+            if (!result.isValid) {
+                const errorMessages = result.violations.map(v =>
+                    `Line ${v.line}, Col ${v.column}: ${v.message}`
+                ).join('\n');
+                setError(`Code does not parse:\n${errorMessages}`);
+                createSnackbar('error', 'Code does not parse');
+                return false;
+            }
+
+            return true;
+        } catch (err: any) {
+            const errorMessage = err?.response?.data?.message || err?.message || 'Failed to validate code';
+            setError(errorMessage);
+            createSnackbar('error', errorMessage);
+            return false;
+        } finally {
+            setIsValidating(false);
+        }
+    };
+
     const handleCreateSnippet = async () => {
+        const isValid = await validateCode(code);
+        if (!isValid) return;
+
         setError(null);
 
         const newSnippet: CreateSnippet = {
@@ -78,7 +127,6 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
         }
     }, [defaultSnippet]);
 
-    // Clear error when modal closes
     useEffect(() => {
         if (!open) {
             setError(null);
@@ -93,11 +141,15 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                                 sx={{display: 'flex', alignItems: 'center'}}>
                         Add Snippet
                     </Typography>
-                    <Button disabled={!snippetName || !code || !language || loadingSnippet} variant="contained"
-                            disableRipple
-                            sx={{boxShadow: 0}} onClick={handleCreateSnippet}>
+                    <Button
+                        disabled={!snippetName || !code || !language || loadingSnippet || isValidating}
+                        variant="contained"
+                        disableRipple
+                        sx={{boxShadow: 0}}
+                        onClick={handleCreateSnippet}
+                    >
                         <Box pr={1} display={"flex"} alignItems={"center"} justifyContent={"center"}>
-                            {loadingSnippet ? <CircularProgress size={24}/> : <Save/>}
+                            {(loadingSnippet || isValidating) ? <CircularProgress size={24}/> : <Save/>}
                         </Box>
                         Save Snippet
                     </Button>

@@ -258,6 +258,34 @@ export class HttpSnippetOperations implements SnippetOperations {
     return (await res.json()) as AnalyzeResult;
   }
 
+  async compileSnippet(
+      snippetId: string,
+      version: string,
+  ): Promise<AnalyzeResult> {
+    const token = await this.getToken();
+
+    const params = new URLSearchParams({
+      snippetId: snippetId,
+      version: version,
+    });
+
+    const url = `${this.snippetUrl}/analyze/compile?${params.toString()}`;
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Compilation failed - HTTP ${res.status}: ${txt}`);
+    }
+
+    return (await res.json()) as AnalyzeResult;
+  }
+
   async getTestCases(snippetId: string): Promise<TestCase[]> {
     const params = new URLSearchParams();
     params.set("snippetId", snippetId);
