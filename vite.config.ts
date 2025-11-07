@@ -6,7 +6,11 @@ export default defineConfig(({ mode }) => {
   return {
     define: {
       'process.env.FRONTEND_URL': JSON.stringify(env.FRONTEND_URL),
-      'process.env.BACKEND_URL': JSON.stringify(env.BACKEND_URL)
+      'process.env.BACKEND_URL': JSON.stringify(env.BACKEND_URL),
+      'process.env.AUTH0_URL': JSON.stringify(env.AUTH0_URL),
+      'process.env.PRINTSCRIPT_URL': JSON.stringify(env.PRINTSCRIPT_URL),
+      'process.env.AUTH0_USERNAME': JSON.stringify(env.AUTH0_USERNAME),
+      'process.env.AUTH0_PASSWORD': JSON.stringify(env.AUTH0_PASSWORD)
     },
     plugins: [react()],
   }
