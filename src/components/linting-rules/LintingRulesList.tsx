@@ -91,9 +91,9 @@ const LintingRulesList = () => {
                                     onChange={e => handleValueChange(rule, e.target.value)}
                                     sx={{ minWidth: 120 }}
                                 >
-                                  <MenuItem value="No style">No style</MenuItem>
-                                  <MenuItem value="snake_case">Snake case</MenuItem>
-                                  <MenuItem value="camelCase">Camel case</MenuItem>
+                                  <MenuItem value="NO_STYLE">No style</MenuItem>
+                                  <MenuItem value="SNAKE_CASE">Snake case</MenuItem>
+                                  <MenuItem value="CAMEL_CASE">Camel case</MenuItem>
                                 </Select>) : typeof rule.value === 'string' ?
                                     (<TextField
                                         variant={"standard"}
