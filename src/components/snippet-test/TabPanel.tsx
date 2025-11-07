@@ -32,7 +32,7 @@ export const TabPanel = ({value, index, test: initialTest, snippetId, version, s
                 <Box sx={{px: 3}} display="flex" flexDirection="column" gap={2}>
                     <Box display="flex" flexDirection="column" gap={1}>
                         <Typography fontWeight="bold">Name</Typography>
-                        <TextField size="small" value={testData?.name}
+                        <TextField size="small" value={testData?.name || ''}
                                    onChange={(e) => setTestData({...testData, name: e.target.value})}/>
                     </Box>
                     <Box display="flex" flexDirection="column" gap={1}>
@@ -87,7 +87,17 @@ export const TabPanel = ({value, index, test: initialTest, snippetId, version, s
                                     Remove
                                 </Button>)
                         }
-                        <Button disabled={!testData?.name} onClick={() => setTestCase({...testData, snippetId: parseInt(snippetId)})} variant={"outlined"} startIcon={<Save/>}>
+                        <Button
+                            disabled={!testData?.name}
+                            onClick={() => setTestCase({
+                                ...testData,
+                                snippetId: parseInt(snippetId),
+                                inputs: testData?.inputs ?? [],
+                                expectedOutputs: testData?.expectedOutputs ?? []
+                            })}
+                            variant={"outlined"}
+                            startIcon={<Save/>}
+                        >
                             Save
                         </Button>
                         <Button

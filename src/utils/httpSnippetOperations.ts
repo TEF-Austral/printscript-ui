@@ -272,11 +272,22 @@ export class HttpSnippetOperations implements SnippetOperations {
     }));
   }
 
-  async postTestCase(testCase: TestCase): Promise<TestCase> {
+  async createTestCase(request: Partial<TestCase>): Promise<TestCase> {
+    const payload = {
+      snippetId: request.snippetId,
+      name: request.name,
+      inputs: request.inputs ?? [],
+      expectedOutputs: request.expectedOutputs ?? [],
+    };
+
     return this.request<TestCase>(`/testcases`, {
       method: "POST",
-      body: JSON.stringify(testCase),
+      body: JSON.stringify(payload),
     });
+  }
+
+  async postTestCase(testCase: Partial<TestCase>): Promise<TestCase> {
+    return this.createTestCase(testCase);
   }
 
   async removeTestCase(id: string): Promise<string> {
