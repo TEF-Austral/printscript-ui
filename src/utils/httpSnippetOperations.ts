@@ -312,10 +312,13 @@ export class HttpSnippetOperations implements SnippetOperations {
       version: string,
       testId: number,
   ): Promise<TestCaseResult> {
-    return this.request<TestCaseResult>(`/tests/execute`, {
+    const token = await this.getToken();
+    const url = `${this.snippetUrl}/tests/execute`;
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         snippetId: parseInt(snippetId),
@@ -323,6 +326,13 @@ export class HttpSnippetOperations implements SnippetOperations {
         testId: testId,
       }),
     });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+    const responseJson = (await res.json()) as { result: TestCaseResult };
+
+    return responseJson.result;
   }
 
   async deleteSnippet(id: string): Promise<string> {
