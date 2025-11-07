@@ -60,18 +60,7 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
         setError(null);
 
         try {
-            const tempSnippet = await createSnippet({
-                name: `temp_${Date.now()}`,
-                content: content,
-                language: language,
-                description: "temp",
-                version: version,
-                extension: fileTypes?.find((f) => f.language === language)?.extension ?? "prs"
-            });
-
-            const result = await snippetOperations.compileSnippet(tempSnippet.id, version);
-
-            await snippetOperations.deleteSnippet(tempSnippet.id);
+            const result = await snippetOperations.validateContent(content, language, version);
 
             if (!result.isValid) {
                 const errorMessages = result.violations.map(v =>

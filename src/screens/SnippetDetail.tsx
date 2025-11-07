@@ -129,7 +129,11 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
     setError(null);
 
     try {
-      const result = await snippetOperations.compileSnippet(id, snippet?.version ?? "1.0");
+      const result = await snippetOperations.validateContent(
+          content,
+          snippet?.language ?? "PRINTSCRIPT",
+          snippet?.version ?? "1.0"
+      );
 
       if (!result.isValid) {
         const errorMessages = result.violations.map(v =>

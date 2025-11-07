@@ -57,6 +57,8 @@ export interface SnippetOperations {
 
   compileSnippet(snippetId: string, version: string): Promise<AnalyzeResult>;
 
+  validateContent(content: string, language: string, version: string): Promise<AnalyzeResult>;
+
   postTestCase(testCase: Partial<TestCase>): Promise<TestCase>;
 
   removeTestCase(id: string): Promise<string>;

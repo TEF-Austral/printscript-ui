@@ -286,6 +286,36 @@ export class HttpSnippetOperations implements SnippetOperations {
     return (await res.json()) as AnalyzeResult;
   }
 
+  async validateContent(
+      content: string,
+      language: string,
+      version: string,
+  ): Promise<AnalyzeResult> {
+    const token = await this.getToken();
+
+    const url = `${this.snippetUrl}/validate/content`;
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        content: content,
+        language: language,
+        version: version,
+      }),
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Validation failed - HTTP ${res.status}: ${txt}`);
+    }
+
+    return (await res.json()) as AnalyzeResult;
+  }
+
   async getTestCases(snippetId: string): Promise<TestCase[]> {
     const params = new URLSearchParams();
     params.set("snippetId", snippetId);
