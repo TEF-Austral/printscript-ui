@@ -97,7 +97,14 @@ const HomeScreen = () => {
                 handleClickSnippet={setSnippetId}
                 snippets={data?.snippets}
             />
-            <Drawer open={!!snippetId} anchor={"right"} onClose={handleCloseModal}>
+            <Drawer
+                open={!!snippetId}
+                anchor={"right"}
+                onClose={handleCloseModal}
+                ModalProps={{
+                    keepMounted: false, // This helps with cleanup
+                }}
+            >
                 {snippetId && <SnippetDetail handleCloseModal={handleCloseModal} id={snippetId} />}
             </Drawer>
             <AddSnippetModal defaultSnippet={snippet} open={addModalOpened}

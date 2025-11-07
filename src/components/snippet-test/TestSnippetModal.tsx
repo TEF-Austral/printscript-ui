@@ -42,7 +42,7 @@ export const TestSnippetModal = ({open, onClose, snippetId, version}: TestSnippe
                     {testCases?.map((testCase) => (
                         <Tab key={testCase.id} label={testCase.name}/>
                     ))}
-                    <Tab icon={<AddRounded />} onClick={() => setValue((testCases?.length ?? 0) + 1)} />
+                    <Tab icon={<AddRounded />} onClick={() => setValue(testCases?.length ?? 0)} />
                 </Tabs>
                 {testCases?.map((testCase, index) => (
                     <TabPanel
@@ -57,7 +57,7 @@ export const TestSnippetModal = ({open, onClose, snippetId, version}: TestSnippe
                     />
                 ))}
                 <TabPanel
-                    index={(testCases?.length ?? 0) + 1}
+                    index={testCases?.length ?? 0}
                     value={value}
                     snippetId={snippetId}
                     version={version}

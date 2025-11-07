@@ -8,7 +8,8 @@ import {
     MenuItem,
     Select,
     SelectChangeEvent,
-    Typography
+    Typography,
+    Alert
 } from "@mui/material";
 import {highlight, languages} from "prismjs";
 import {useEffect, useState} from "react";
@@ -22,6 +23,7 @@ import {CreateSnippet, CreateSnippetWithLang} from "../../utils/snippet.ts";
 import {ModalWrapper} from "../common/ModalWrapper.tsx";
 import {useCreateSnippet, useGetFileTypes} from "../../utils/queries.tsx";
 import {queryClient} from "../../App.tsx";
+import {useSnackbarContext} from "../../contexts/snackbarContext.tsx";
 
 export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     open: boolean,
@@ -31,14 +33,23 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     const [language, setLanguage] = useState(defaultSnippet?.language ?? "PRINTSCRIPT");
     const [code, setCode] = useState(defaultSnippet?.content ?? "");
     const [snippetName, setSnippetName] = useState(defaultSnippet?.name ?? "")
-    const [description, setDescription] = useState("") // ← Agregar estado
+    const [description, setDescription] = useState("")
     const [version, setVersion] = useState("1.0")
+    const [error, setError] = useState<string | null>(null);
+    const {createSnackbar} = useSnackbarContext();
+
     const {mutateAsync: createSnippet, isLoading: loadingSnippet} = useCreateSnippet({
-        onSuccess: () => queryClient.invalidateQueries('listSnippets')
+        onSuccess: () => {
+            queryClient.invalidateQueries('listSnippets');
+            createSnackbar('success', 'Snippet created successfully');
+            onClose();
+        }
     })
     const {data: fileTypes} = useGetFileTypes();
 
     const handleCreateSnippet = async () => {
+        setError(null);
+
         const newSnippet: CreateSnippet = {
             name: snippetName,
             content: code,
@@ -47,8 +58,14 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
             version: version,
             extension: fileTypes?.find((f) => f.language === language)?.extension ?? "prs"
         }
-        await createSnippet(newSnippet);
-        onClose();
+
+        try {
+            await createSnippet(newSnippet);
+        } catch (err: any) {
+            const errorMessage = err?.response?.data?.message || err?.message || 'Failed to create snippet';
+            setError(errorMessage);
+            createSnackbar('error', errorMessage);
+        }
     }
 
     useEffect(() => {
@@ -60,6 +77,13 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
             setVersion(defaultSnippet?.version)
         }
     }, [defaultSnippet]);
+
+    // Clear error when modal closes
+    useEffect(() => {
+        if (!open) {
+            setError(null);
+        }
+    }, [open]);
 
     return (
         <ModalWrapper open={open} onClose={onClose}>
@@ -79,6 +103,13 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                     </Button>
                 </Box>
             }
+
+            {error && (
+                <Alert severity="error" onClose={() => setError(null)}>
+                    {error}
+                </Alert>
+            )}
+
             <Box sx={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -153,4 +184,3 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
         </ModalWrapper>
     )
 }
-
