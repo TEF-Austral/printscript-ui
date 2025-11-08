@@ -74,7 +74,7 @@ const HomeScreen = () => {
                 language: fileType.language,
                 extension: fileType.extension,
                 description: "",
-                version: "1.0.0"
+                version: "1.0"
             });
         }).catch(e => {
             console.error(e);
