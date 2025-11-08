@@ -117,7 +117,7 @@ export const TabPanel = ({value, index, test: initialTest, snippetId, version, s
                         >
                             Test
                         </Button>
-                        {data && (data === "success" ? <Chip label="Pass" color="success"/> :
+                        {data && (data ? <Chip label="Pass" color="success"/> :
                             <Chip label="Fail" color="error"/>)}
                     </Box>
                 </Box>
