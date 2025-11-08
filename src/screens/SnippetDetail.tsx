@@ -136,10 +136,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
       );
 
       if (!result.isValid) {
-        const errorMessages = result.violations.map(v =>
-            `Line ${v.line}, Col ${v.column}: ${v.message}`
-        ).join('\n');
-        setError(`Code does not parse:\n${errorMessages}`);
+        setError("Code does not parse");
         createSnackbar('error', 'Code does not parse');
         return false;
       }
@@ -159,8 +156,8 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
     const isValid = await validateCode(code);
     if (!isValid) return;
 
-    updateSnippet({id: id, updateSnippet: {content: code}});
     setError(null);
+    updateSnippet({id: id, updateSnippet: {content: code}});
   };
 
   return (
@@ -219,7 +216,9 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
 
             {error && (
                 <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
-                  {error}
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    {error}
+                  </Typography>
                 </Alert>
             )}
 
