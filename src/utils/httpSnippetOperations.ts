@@ -16,13 +16,13 @@ import {
 import { FileType } from "../types/FileType";
 import { TestCase } from "../types/TestCase";
 import { Rule } from "../types/Rule";
-import { TestCaseResult } from "./queries";
 import { BackendPaginatedUsers, PaginatedUsers, User } from "./users";
 import {AUTH_URL, PRINTSCRIPT_URL, SNIPPET_URL} from "./constants";
 import {
   BackendPaginatedSnippets,
   BackendSnippet,
 } from "../types/BackendSnippet.ts";
+import {TestCaseResult} from "../types/TestCaseResult.ts";
 
 export class HttpSnippetOperations implements SnippetOperations {
   private readonly snippetUrl = SNIPPET_URL;
@@ -388,9 +388,7 @@ export class HttpSnippetOperations implements SnippetOperations {
       const txt = await res.text();
       throw new Error(`HTTP ${res.status}: ${txt}`);
     }
-    const responseJson = (await res.json()) as { result: TestCaseResult };
-
-    return responseJson.result;
+    return await res.json();
   }
 
   async deleteSnippet(id: string): Promise<string> {

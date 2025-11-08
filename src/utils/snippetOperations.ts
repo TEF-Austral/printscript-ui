@@ -6,10 +6,10 @@ import {
 } from "./snippet";
 import { PaginatedUsers } from "./users.ts";
 import { TestCase } from "../types/TestCase.ts";
-import { TestCaseResult } from "./queries.tsx";
 import { FileType } from "../types/FileType.ts";
 import { Rule } from "../types/Rule.ts";
 import { SnippetFilters } from "../types/SnippetFilter.types.ts";
+import {TestCaseResult} from "../types/TestCaseResult.ts";
 
 export type SharePermissions = { canRead: boolean; canEdit: boolean };
 

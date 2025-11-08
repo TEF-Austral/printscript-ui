@@ -10,6 +10,7 @@ import {useAuth0} from "@auth0/auth0-react";
 
 import {HttpSnippetOperations} from "./httpSnippetOperations.ts";
 import {defaultFilters, SnippetFilters} from "../types/SnippetFilter.types.ts";
+import {TestCaseResult} from "../types/TestCaseResult.ts";
 
 export const useSnippetsOperations = () => {
     const {getAccessTokenSilently} = useAuth0()
@@ -127,8 +128,6 @@ export const useRemoveTestCase = ({onSuccess}: { onSuccess: () => void }) => {
         }
     );
 };
-
-export type TestCaseResult = "success" | "fail"
 
 export const useTestSnippet = () => {
     const snippetOperations = useSnippetsOperations()
