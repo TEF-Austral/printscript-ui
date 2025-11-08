@@ -29,7 +29,7 @@ const LintingRulesList = () => {
 
   const handleValueChange = (rule: Rule, newValue: string | number) => {
     const newRules = rules?.map(r => {
-      if (r.name === rule.name) {
+      if (r.id === rule.id && r.name === rule.name) {
         return {...r, value: newValue}
       } else {
         return r;
@@ -45,7 +45,7 @@ const LintingRulesList = () => {
 
   const toggleRule = (rule: Rule) => () => {
     const newRules = rules?.map(r => {
-      if (r.name === rule.name) {
+      if (r.id === rule.id && r.name === rule.name) {
         return {...r, isActive: !r.isActive}
       } else {
         return r;
@@ -64,10 +64,10 @@ const LintingRulesList = () => {
         <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
           {
             isLoading || isLoadingMutate ?  <Typography style={{height: 80}}>Loading...</Typography> :
-                rules?.map((rule) => {
+                rules?.map((rule, index) => {
                   return (
                       <ListItem
-                          key={rule.name}
+                          key={rule.id ?? `rule-${index}`}
                           disablePadding
                           style={{height: 40}}
                       >
@@ -91,9 +91,9 @@ const LintingRulesList = () => {
                                     onChange={e => handleValueChange(rule, e.target.value)}
                                     sx={{ minWidth: 120 }}
                                 >
-                                  <MenuItem value="">No style</MenuItem>
-                                  <MenuItem value="snake_case">Snake case</MenuItem>
-                                  <MenuItem value="camelCase">Camel case</MenuItem>
+                                  <MenuItem value="NO_STYLE">No style</MenuItem>
+                                  <MenuItem value="SNAKE_CASE">Snake case</MenuItem>
+                                  <MenuItem value="CAMEL_CASE">Camel case</MenuItem>
                                 </Select>) : typeof rule.value === 'string' ?
                                     (<TextField
                                         variant={"standard"}

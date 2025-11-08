@@ -3,6 +3,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter, // <-- Make sure TableFooter is imported
   TableHead,
   TablePagination,
   TableRow
@@ -51,9 +52,18 @@ export const SnippetTable = (props: SnippetTableProps) => {
             )
           }
           </TableBody>
-          <TablePagination count={count} page={page} rowsPerPage={pageSize}
-                           onPageChange={(_, page) => handleGoToPage(page)}
-                           onRowsPerPageChange={e => handleChangePageSize(Number(e.target.value))} />
+          <TableFooter>
+            <TableRow>
+              <TablePagination
+                  colSpan={4}
+                  count={count}
+                  page={page}
+                  rowsPerPage={pageSize}
+                  onPageChange={(_, page) => handleGoToPage(page)}
+                  onRowsPerPageChange={e => handleChangePageSize(Number(e.target.value))}
+              />
+            </TableRow>
+          </TableFooter>
         </Table>
       </>
   );

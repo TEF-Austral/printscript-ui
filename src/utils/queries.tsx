@@ -6,21 +6,22 @@ import {TestCase} from "../types/TestCase.ts";
 import {FileType} from "../types/FileType.ts";
 import {Rule} from "../types/Rule.ts";
 import {useAuth0} from "@auth0/auth0-react";
-import {useEffect} from "react";
+//import {useEffect} from "react";
 
 import {HttpSnippetOperations} from "./httpSnippetOperations.ts";
 import {defaultFilters, SnippetFilters} from "../types/SnippetFilter.types.ts";
+import {TestCaseResult} from "../types/TestCaseResult.ts";
 
 export const useSnippetsOperations = () => {
     const {getAccessTokenSilently} = useAuth0()
 
-    useEffect(() => {
-        getAccessTokenSilently()
-            .then(token => {
-                console.log(token)
-            })
-            .catch(error => console.error(error));
-    });
+    // useEffect(() => {
+    //     getAccessTokenSilently()
+    //         .then(token => {
+    //             console.log(token)
+    //         })
+    //         .catch(error => console.error(error));
+    // });
 
     const snippetOperations: SnippetOperations = new HttpSnippetOperations(
         async () => {
@@ -96,11 +97,17 @@ export const useShareSnippet = () => {
     );
 };
 
-export const useGetTestCases = () => {
+export const useGetTestCases = (snippetId: string) => {
     const snippetOperations = useSnippetsOperations()
 
-    return useQuery<TestCase[] | undefined, Error>(['testCases'], () => snippetOperations.getTestCases(), {});
-};
+    return useQuery<TestCase[] | undefined, Error>(
+        ['testCases', snippetId],
+        () => snippetOperations.getTestCases(snippetId),
+        {
+            enabled: !!snippetId
+        }
+    );
+}
 
 export const usePostTestCase = () => {
     const snippetOperations = useSnippetsOperations()
@@ -122,13 +129,16 @@ export const useRemoveTestCase = ({onSuccess}: { onSuccess: () => void }) => {
     );
 };
 
-export type TestCaseResult = "success" | "fail"
-
 export const useTestSnippet = () => {
     const snippetOperations = useSnippetsOperations()
 
-    return useMutation<TestCaseResult, Error, Partial<TestCase>>(
-        (tc) => snippetOperations.testSnippet(tc)
+    return useMutation<
+        TestCaseResult,
+        Error,
+        { snippetId: string; version: string; testId: number }
+    >(
+        ({ snippetId, version, testId }) =>
+            snippetOperations.testSnippet(snippetId, version, testId)
     )
 }
 

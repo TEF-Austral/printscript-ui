@@ -8,11 +8,13 @@ type TabPanelProps = {
     index: number;
     value: number;
     test?: TestCase;
+    snippetId: string;
+    version: string;
     setTestCase: (test: Partial<TestCase>) => void;
     removeTestCase?: (testIndex: string) => void;
 }
 
-export const TabPanel = ({value, index, test: initialTest, setTestCase, removeTestCase}: TabPanelProps) => {
+export const TabPanel = ({value, index, test: initialTest, snippetId, version, setTestCase, removeTestCase}: TabPanelProps) => {
     const [testData, setTestData] = useState<Partial<TestCase> | undefined>(initialTest);
 
     const {mutateAsync: testSnippet, data} = useTestSnippet();
@@ -30,7 +32,7 @@ export const TabPanel = ({value, index, test: initialTest, setTestCase, removeTe
                 <Box sx={{px: 3}} display="flex" flexDirection="column" gap={2}>
                     <Box display="flex" flexDirection="column" gap={1}>
                         <Typography fontWeight="bold">Name</Typography>
-                        <TextField size="small" value={testData?.name}
+                        <TextField size="small" value={testData?.name || ''}
                                    onChange={(e) => setTestData({...testData, name: e.target.value})}/>
                     </Box>
                     <Box display="flex" flexDirection="column" gap={1}>
@@ -40,8 +42,8 @@ export const TabPanel = ({value, index, test: initialTest, setTestCase, removeTe
                             size="small"
                             id="tags-filled"
                             freeSolo
-                            value={testData?.input ?? []}
-                            onChange={(_, value) => setTestData({...testData, input: value})}
+                            value={testData?.inputs ?? []}
+                            onChange={(_, value) => setTestData({...testData, inputs: value})}
                             renderTags={(value: readonly string[], getTagProps) =>
                                 value.map((option: string, index: number) => (
                                     <Chip variant="outlined" label={option} {...getTagProps({index})} />
@@ -62,8 +64,8 @@ export const TabPanel = ({value, index, test: initialTest, setTestCase, removeTe
                             size="small"
                             id="tags-filled"
                             freeSolo
-                            value={testData?.output ?? []}
-                            onChange={(_, value) => setTestData({...testData, output: value})}
+                            value={testData?.expectedOutputs ?? []}
+                            onChange={(_, value) => setTestData({...testData, expectedOutputs: value})}
                             renderTags={(value: readonly string[], getTagProps) =>
                                 value.map((option: string, index: number) => (
                                     <Chip variant="outlined" label={option} {...getTagProps({index})} />
@@ -80,20 +82,42 @@ export const TabPanel = ({value, index, test: initialTest, setTestCase, removeTe
                     <Box display="flex" flexDirection="row" gap={1}>
                         {
                             (testData?.id && removeTestCase) && (
-                            <Button onClick={() => removeTestCase(testData?.id ?? "")} variant={"outlined"} color={"error"}
-                                    startIcon={<Delete/>}>
-                                Remove
-                            </Button>)
+                                <Button onClick={() => removeTestCase(testData?.id ?? "")} variant={"outlined"} color={"error"}
+                                        startIcon={<Delete/>}>
+                                    Remove
+                                </Button>)
                         }
-                        <Button disabled={!testData?.name} onClick={() => setTestCase(testData ?? {})} variant={"outlined"} startIcon={<Save/>}>
+                        <Button
+                            disabled={!testData?.name}
+                            onClick={() => setTestCase({
+                                ...testData,
+                                snippetId: parseInt(snippetId),
+                                inputs: testData?.inputs ?? [],
+                                expectedOutputs: testData?.expectedOutputs ?? []
+                            })}
+                            variant={"outlined"}
+                            startIcon={<Save/>}
+                        >
                             Save
                         </Button>
-                        <Button onClick={() => testSnippet(testData ?? {})} variant={"contained"} startIcon={<BugReport/>}
-                                disableElevation>
+                        <Button
+                            onClick={() => {
+                                if (testData?.id) {
+                                    testSnippet({
+                                        snippetId: snippetId,
+                                        version: version,
+                                        testId: parseInt(testData.id)
+                                    })
+                                }
+                            }}
+                            variant={"contained"}
+                            startIcon={<BugReport/>}
+                            disabled={!testData?.id}
+                            disableElevation
+                        >
                             Test
                         </Button>
-                        {data && (data === "success" ? <Chip label="Pass" color="success"/> :
-                            <Chip label="Fail" color="error"/>)}
+                        {data && (data.passed ? <Chip label="Pass" color="success"/> : <Chip label="Fail" color="error"/>)}
                     </Box>
                 </Box>
             )}

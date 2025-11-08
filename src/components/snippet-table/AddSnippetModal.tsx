@@ -8,7 +8,8 @@ import {
     MenuItem,
     Select,
     SelectChangeEvent,
-    Typography
+    Typography,
+    Alert
 } from "@mui/material";
 import {highlight, languages} from "prismjs";
 import {useEffect, useState} from "react";
@@ -22,23 +23,68 @@ import {CreateSnippet, CreateSnippetWithLang} from "../../utils/snippet.ts";
 import {ModalWrapper} from "../common/ModalWrapper.tsx";
 import {useCreateSnippet, useGetFileTypes} from "../../utils/queries.tsx";
 import {queryClient} from "../../App.tsx";
+import {useSnackbarContext} from "../../contexts/snackbarContext.tsx";
+import {useSnippetsOperations} from "../../utils/queries.tsx";
 
 export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     open: boolean,
     onClose: () => void,
     defaultSnippet?: CreateSnippetWithLang
 }) => {
-    const [language, setLanguage] = useState(defaultSnippet?.language ?? "printscript");
+    const [language, setLanguage] = useState(defaultSnippet?.language ?? "PRINTSCRIPT");
     const [code, setCode] = useState(defaultSnippet?.content ?? "");
     const [snippetName, setSnippetName] = useState(defaultSnippet?.name ?? "")
-    const [description, setDescription] = useState("") // ← Agregar estado
+    const [description, setDescription] = useState("")
     const [version, setVersion] = useState("1.0")
+    const [error, setError] = useState<string | null>(null);
+    const [isValidating, setIsValidating] = useState(false);
+    const {createSnackbar} = useSnackbarContext();
+    const snippetOperations = useSnippetsOperations();
+
     const {mutateAsync: createSnippet, isLoading: loadingSnippet} = useCreateSnippet({
-        onSuccess: () => queryClient.invalidateQueries('listSnippets')
+        onSuccess: () => {
+            queryClient.invalidateQueries('listSnippets');
+            createSnackbar('success', 'Snippet created successfully');
+            onClose();
+        }
     })
     const {data: fileTypes} = useGetFileTypes();
 
+    const validateCode = async (content: string): Promise<boolean> => {
+        if (!content.trim()) {
+            setError("Code cannot be empty");
+            return false;
+        }
+
+        setIsValidating(true);
+        setError(null);
+
+        try {
+            const result = await snippetOperations.validateContent(content, language, version);
+
+            if (!result.isValid) {
+                setError("Code does not parse");
+                createSnackbar('error', 'Code does not parse');
+                return false;
+            }
+
+            return true;
+        } catch (err: any) {
+            const errorMessage = err?.response?.data?.message || err?.message || 'Failed to validate code';
+            setError(errorMessage);
+            createSnackbar('error', errorMessage);
+            return false;
+        } finally {
+            setIsValidating(false);
+        }
+    };
+
     const handleCreateSnippet = async () => {
+        const isValid = await validateCode(code);
+        if (!isValid) return;
+
+        setError(null);
+
         const newSnippet: CreateSnippet = {
             name: snippetName,
             content: code,
@@ -47,8 +93,14 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
             version: version,
             extension: fileTypes?.find((f) => f.language === language)?.extension ?? "prs"
         }
-        await createSnippet(newSnippet);
-        onClose();
+
+        try {
+            await createSnippet(newSnippet);
+        } catch (err: any) {
+            const errorMessage = err?.response?.data?.message || err?.message || 'Failed to create snippet';
+            setError(errorMessage);
+            createSnackbar('error', errorMessage);
+        }
     }
 
     useEffect(() => {
@@ -61,6 +113,12 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
         }
     }, [defaultSnippet]);
 
+    useEffect(() => {
+        if (!open) {
+            setError(null);
+        }
+    }, [open]);
+
     return (
         <ModalWrapper open={open} onClose={onClose}>
             {
@@ -69,16 +127,29 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                                 sx={{display: 'flex', alignItems: 'center'}}>
                         Add Snippet
                     </Typography>
-                    <Button disabled={!snippetName || !code || !language || loadingSnippet} variant="contained"
-                            disableRipple
-                            sx={{boxShadow: 0}} onClick={handleCreateSnippet}>
+                    <Button
+                        disabled={!snippetName || !code || !language || loadingSnippet || isValidating}
+                        variant="contained"
+                        disableRipple
+                        sx={{boxShadow: 0}}
+                        onClick={handleCreateSnippet}
+                    >
                         <Box pr={1} display={"flex"} alignItems={"center"} justifyContent={"center"}>
-                            {loadingSnippet ? <CircularProgress size={24}/> : <Save/>}
+                            {(loadingSnippet || isValidating) ? <CircularProgress size={24}/> : <Save/>}
                         </Box>
                         Save Snippet
                     </Button>
                 </Box>
             }
+
+            {error && (
+                <Alert severity="error" onClose={() => setError(null)}>
+                    <Typography variant="subtitle2" fontWeight="bold">
+                        {error}
+                    </Typography>
+                </Alert>
+            )}
+
             <Box sx={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -153,4 +224,3 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
         </ModalWrapper>
     )
 }
-
