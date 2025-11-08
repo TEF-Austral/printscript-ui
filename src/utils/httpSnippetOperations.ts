@@ -293,7 +293,7 @@ export class HttpSnippetOperations implements SnippetOperations {
   ): Promise<AnalyzeResult> {
     const token = await this.getToken();
 
-    const url = `${this.snippetUrl}/validate/content`;
+    const url = `${this.snippetUrl}/snippets/validate-content`;
 
     const res = await fetch(url, {
       method: "POST",
