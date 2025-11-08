@@ -2,7 +2,7 @@ import {Box,  Divider, Tab, Tabs, Typography} from "@mui/material";
 import {ModalWrapper} from "../common/ModalWrapper.tsx";
 import {SyntheticEvent, useState} from "react";
 import {AddRounded} from "@mui/icons-material";
-import {useGetTestCases, usePostTestCase, useRemoveTestCase} from "../../utils/queries.tsx";
+import {useGetTestCases, useUpsertTestCase, useRemoveTestCase} from "../../utils/queries.tsx";
 import {TabPanel} from "./TabPanel.tsx";
 import {queryClient} from "../../App.tsx";
 
@@ -17,9 +17,20 @@ export const TestSnippetModal = ({open, onClose, snippetId, version}: TestSnippe
     const [value, setValue] = useState(0);
 
     const {data: testCases} = useGetTestCases(snippetId);
-    const {mutateAsync: postTestCase} = usePostTestCase();
+    const {mutateAsync: upsertTestCase} = useUpsertTestCase({
+        onSuccess: (data) => {
+            queryClient.invalidateQueries(['testCases', snippetId]);
+            const idx = testCases?.findIndex(tc => tc.id === data.id) ?? -1;
+            setValue(idx >= 0 ? idx : (testCases?.length ?? 0));
+        }
+    });
+
+
     const {mutateAsync: removeTestCase} = useRemoveTestCase({
-        onSuccess: () => queryClient.invalidateQueries('testCases')
+        onSuccess: () => {
+            queryClient.invalidateQueries(['testCases', snippetId]);
+            setValue(0);
+        }
     });
 
     const handleChange = (_: SyntheticEvent, newValue: number) => {
@@ -52,7 +63,7 @@ export const TestSnippetModal = ({open, onClose, snippetId, version}: TestSnippe
                         test={testCase}
                         snippetId={snippetId}
                         version={version}
-                        setTestCase={(tc) => postTestCase(tc)}
+                        setTestCase={(tc) => upsertTestCase({ ...tc, id: testCase.id })}
                         removeTestCase={(i) => removeTestCase(i)}
                     />
                 ))}
@@ -61,7 +72,7 @@ export const TestSnippetModal = ({open, onClose, snippetId, version}: TestSnippe
                     value={value}
                     snippetId={snippetId}
                     version={version}
-                    setTestCase={(tc) => postTestCase(tc)}
+                    setTestCase={(tc) => upsertTestCase(tc)}
                 />
             </Box>
         </ModalWrapper>

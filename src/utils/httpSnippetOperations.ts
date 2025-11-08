@@ -348,6 +348,28 @@ export class HttpSnippetOperations implements SnippetOperations {
     return this.createTestCase(testCase);
   }
 
+  async upsertTestCase(testCase: Partial<TestCase>): Promise<TestCase> {
+    if (testCase.id && String(testCase.id).trim() !== "") {
+      return this.updateTestCase(String(testCase.id), testCase);
+    }
+    return this.createTestCase(testCase);
+  }
+
+
+  async updateTestCase(id: string, testCase: Partial<TestCase>): Promise<TestCase> {
+    const payload = {
+      snippetId: testCase.snippetId,
+      name: testCase.name,
+      inputs: testCase.inputs ?? [],
+      expectedOutputs: testCase.expectedOutputs ?? [],
+    };
+
+    return this.request<TestCase>(`/testcases/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  }
+
   async removeTestCase(id: string): Promise<string> {
     const token = await this.getToken();
     const res = await fetch(`${this.snippetUrl}/testcases/${encodeURIComponent(id)}`, {

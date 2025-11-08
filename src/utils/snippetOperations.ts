@@ -61,6 +61,8 @@ export interface SnippetOperations {
 
   postTestCase(testCase: Partial<TestCase>): Promise<TestCase>;
 
+  upsertTestCase?(testCase: Partial<TestCase>): Promise<TestCase>;
+
   removeTestCase(id: string): Promise<string>;
 
   deleteSnippet(id: string): Promise<string>;

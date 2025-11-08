@@ -109,11 +109,27 @@ export const useGetTestCases = (snippetId: string) => {
     );
 }
 
-export const usePostTestCase = () => {
+export const usePostTestCase = ({ onSuccess }: { onSuccess?: (data: TestCase) => void } = {}) => {
     const snippetOperations = useSnippetsOperations()
 
     return useMutation<TestCase, Error, Partial<TestCase>>(
-        (tc) => snippetOperations.postTestCase(tc)
+        (tc) => snippetOperations.postTestCase(tc),
+        { onSuccess }
+    );
+};
+
+export const useUpsertTestCase = ({ onSuccess }: { onSuccess?: (data: TestCase) => void } = {}) => {
+    const snippetOperations = useSnippetsOperations();
+
+    return useMutation<TestCase, Error, Partial<TestCase>>(
+        (tc) => {
+            if (typeof (snippetOperations as any).upsertTestCase === 'function') {
+                return (snippetOperations as any).upsertTestCase(tc);
+            }
+            // fallback to create when upsert not implemented
+            return snippetOperations.postTestCase(tc);
+        },
+        { onSuccess }
     );
 };
 
