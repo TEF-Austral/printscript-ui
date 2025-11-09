@@ -177,7 +177,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
         testId: parseInt(selectedTestId)
       });
       setTestResult(result);
-      createSnackbar('success', result.passed ? 'Test passed!' : 'Test failed');
+      createSnackbar(result.passed ? 'success' : 'error', result.passed ? 'Test passed!' : 'Test failed');
     } catch (error) {
       createSnackbar('error', 'Error running test');
       console.error(error);
