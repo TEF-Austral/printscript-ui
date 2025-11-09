@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: release
+          ref: master
 
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
@@ -54,7 +54,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.dev
+          file: ./Dockerfile.prod
           no-cache: true
           push: true
           tags: |
