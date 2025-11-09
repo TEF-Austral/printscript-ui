@@ -87,6 +87,7 @@ const HomeScreen = () => {
     return (
         <>
             <Box ref={popoverRef} sx={{ position: 'absolute', top: 0, right: 0 }} />
+            <Box>HOLA</Box>
             <SnippetFiltersComponent
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
