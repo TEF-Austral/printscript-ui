@@ -4,14 +4,14 @@ import {highlight, languages} from "prismjs";
 import "prismjs/components/prism-clike";
 import "prismjs/components/prism-javascript";
 import "prismjs/themes/prism-okaidia.css";
-import {Alert, Box, CircularProgress, IconButton, Tooltip, Typography, Chip} from "@mui/material";
+import {Alert, Box, CircularProgress, IconButton, Tooltip, Typography, Chip, Button, MenuItem, Select, FormControl, InputLabel} from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import {
   useUpdateSnippetById
 } from "../utils/queries.tsx";
-import {useFormatSnippet, useGetSnippetById, useShareSnippet, useAnalyzeSnippet} from "../utils/queries.tsx";
+import {useFormatSnippet, useGetSnippetById, useShareSnippet, useAnalyzeSnippet, useGetTestCases, useTestSnippet} from "../utils/queries.tsx";
 import {Bòx} from "../components/snippet-table/SnippetBox.tsx";
-import {BugReport, Delete, Download, Save, Share, Upload, CheckCircle} from "@mui/icons-material";
+import {BugReport, Delete, Download, Save, Share, Upload, CheckCircle, PlayArrow} from "@mui/icons-material";
 import {ShareSnippetModal} from "../components/snippet-detail/ShareSnippetModal.tsx";
 import {TestSnippetModal} from "../components/snippet-test/TestSnippetModal.tsx";
 import {Snippet} from "../utils/snippet.ts";
@@ -22,6 +22,7 @@ import {DeleteConfirmationModal} from "../components/snippet-detail/DeleteConfir
 import {useSnackbarContext} from "../contexts/snackbarContext.tsx";
 import { SharePermissions } from "../utils/snippetOperations";
 import {useSnippetsOperations} from "../utils/queries.tsx";
+import {TestCaseResult} from "../types/TestCaseResult.ts";
 
 type SnippetDetailProps = {
   id: string;
@@ -59,15 +60,20 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   const [testModalOpened, setTestModalOpened] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<TestCaseResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const snippetOperations = useSnippetsOperations();
 
   const {data: snippet, isLoading} = useGetSnippetById(id);
+  const {data: testCases} = useGetTestCases(id);
   const {mutate: shareSnippet, isLoading: loadingShare} = useShareSnippet();
 
   const {mutate: formatSnippet, isLoading: isFormatLoading, data: formatSnippetData} = useFormatSnippet();
 
   const {mutate: analyzeSnippet, isLoading: isAnalyzeLoading, data: analyzeResult} = useAnalyzeSnippet();
+
+  const {mutateAsync: testSnippet, isLoading: isTestLoading} = useTestSnippet();
 
   const {mutate: updateSnippet, isLoading: isUpdateSnippetLoading} = useUpdateSnippetById({
     onSuccess: () => queryClient.invalidateQueries(['snippet', id])
@@ -142,8 +148,9 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
       }
 
       return true;
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to validate code';
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to validate code';
       setError(errorMessage);
       createSnackbar('error', errorMessage);
       return false;
@@ -158,6 +165,28 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
 
     setError(null);
     updateSnippet({id: id, updateSnippet: {content: code}});
+  };
+
+  const handleRunTest = async () => {
+    if (!selectedTestId || !snippet) return;
+
+    try {
+      const result = await testSnippet({
+        snippetId: id,
+        version: snippet.version,
+        testId: parseInt(selectedTestId)
+      });
+      setTestResult(result);
+      createSnackbar('success', result.passed ? 'Test passed!' : 'Test failed');
+    } catch (error) {
+      createSnackbar('error', 'Error running test');
+      console.error(error);
+    }
+  };
+
+  const handleSelectTest = (testId: string) => {
+    setSelectedTestId(testId);
+    setTestResult(null);
   };
 
   return (
@@ -247,6 +276,68 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                 </Box>
             )}
 
+            {testCases && testCases.length > 0 && (
+                <Box mb={2} display="flex" alignItems="center" gap={2}>
+                  <FormControl size="small" sx={{ minWidth: 200 }}>
+                    <InputLabel>Select Test</InputLabel>
+                    <Select
+                        value={selectedTestId || ''}
+                        onChange={(e) => handleSelectTest(e.target.value)}
+                        label="Select Test"
+                    >
+                      {testCases.map((test) => (
+                          <MenuItem key={test.id} value={test.id || ''}>
+                            {test.name}
+                          </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <Button
+                      variant="contained"
+                      startIcon={isTestLoading ? <CircularProgress size={20} /> : <PlayArrow />}
+                      onClick={handleRunTest}
+                      disabled={!selectedTestId || isTestLoading}
+                      disableElevation
+                  >
+                    Run Test
+                  </Button>
+                </Box>
+            )}
+
+            {testResult && (
+                <Box mb={2}>
+                  <Alert severity={testResult.passed ? "success" : "error"}>
+                    <Typography variant="subtitle2" fontWeight="bold">
+                      Test {testResult.passed ? "Passed" : "Failed"}
+                    </Typography>
+                    {testResult.outputs && testResult.outputs.length > 0 && (
+                        <Box mt={1}>
+                          <Typography variant="body2" fontWeight="bold">Outputs:</Typography>
+                          {testResult.outputs.map((output, idx) => (
+                              <Chip key={idx} label={output} size="small" sx={{ mr: 1, mt: 0.5 }} />
+                          ))}
+                        </Box>
+                    )}
+                    {testResult.expectedOutputs && testResult.expectedOutputs.length > 0 && (
+                        <Box mt={1}>
+                          <Typography variant="body2" fontWeight="bold">Expected Outputs:</Typography>
+                          {testResult.expectedOutputs.map((output, idx) => (
+                              <Chip key={idx} label={output} size="small" color="primary" sx={{ mr: 1, mt: 0.5 }} />
+                          ))}
+                        </Box>
+                    )}
+                    {testResult.errors && testResult.errors.length > 0 && (
+                        <Box mt={1}>
+                          <Typography variant="body2" fontWeight="bold" color="error">Errors:</Typography>
+                          {testResult.errors.map((error, idx) => (
+                              <Typography key={idx} variant="body2" color="error">{error}</Typography>
+                          ))}
+                        </Box>
+                    )}
+                  </Alert>
+                </Box>
+            )}
+
             <Box display={"flex"} gap={2}>
               <Bòx flex={1} height={"fit-content"} overflow={"none"} minHeight={"500px"} bgcolor={'black'} color={'white'} code={code}>
                 <Editor
@@ -278,6 +369,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                 onClose={() => setTestModalOpened(false)}
                 snippetId={id}
                 version={snippet.version}
+                onSelectTest={handleSelectTest}
             />
         )}
         <DeleteConfirmationModal open={deleteConfirmationModalOpen} onClose={() => setDeleteConfirmationModalOpen(false)} id={snippet?.id ?? ""} setCloseDetails={handleCloseModal} />

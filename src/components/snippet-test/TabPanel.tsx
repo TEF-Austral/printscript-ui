@@ -1,23 +1,22 @@
 import {useState} from "react";
 import {TestCase} from "../../types/TestCase.ts";
 import {Autocomplete, Box, Button, Chip, TextField, Typography} from "@mui/material";
-import {BugReport, Delete, Save} from "@mui/icons-material";
-import {useTestSnippet} from "../../utils/queries.tsx";
+import {Delete, Save, CheckCircle} from "@mui/icons-material";
 
 type TabPanelProps = {
     index: number;
     value: number;
     test?: TestCase;
     snippetId: string;
-    version: string;
     setTestCase: (test: Partial<TestCase>) => void;
     removeTestCase?: (testIndex: string) => void;
+    onSelectTest?: (testId: string) => void;
+    onClose?: () => void;
 }
 
-export const TabPanel = ({value, index, test: initialTest, snippetId, version, setTestCase, removeTestCase}: TabPanelProps) => {
+export const TabPanel = ({value, index, test: initialTest, snippetId, setTestCase, removeTestCase, onSelectTest, onClose}: TabPanelProps) => {
     const [testData, setTestData] = useState<Partial<TestCase> | undefined>(initialTest);
 
-    const {mutateAsync: testSnippet, data} = useTestSnippet();
 
 
     return (
@@ -100,24 +99,19 @@ export const TabPanel = ({value, index, test: initialTest, snippetId, version, s
                         >
                             Save
                         </Button>
-                        <Button
-                            onClick={() => {
-                                if (testData?.id) {
-                                    testSnippet({
-                                        snippetId: snippetId,
-                                        version: version,
-                                        testId: parseInt(testData.id)
-                                    })
-                                }
-                            }}
-                            variant={"contained"}
-                            startIcon={<BugReport/>}
-                            disabled={!testData?.id}
-                            disableElevation
-                        >
-                            Test
-                        </Button>
-                        {data && (data.passed ? <Chip label="Pass" color="success"/> : <Chip label="Fail" color="error"/>)}
+                        {testData?.id && onSelectTest && (
+                            <Button
+                                onClick={() => {
+                                    onSelectTest(testData.id!);
+                                    onClose?.();
+                                }}
+                                variant={"contained"}
+                                startIcon={<CheckCircle/>}
+                                disableElevation
+                            >
+                                Select
+                            </Button>
+                        )}
                     </Box>
                 </Box>
             )}

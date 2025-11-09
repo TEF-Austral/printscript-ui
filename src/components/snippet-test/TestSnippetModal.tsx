@@ -11,9 +11,11 @@ type TestSnippetModalProps = {
     onClose: () => void
     snippetId: string
     version: string
+    onSelectTest?: (testId: string) => void
 }
 
-export const TestSnippetModal = ({open, onClose, snippetId, version}: TestSnippetModalProps) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const TestSnippetModal = ({open, onClose, snippetId, version: _version, onSelectTest}: TestSnippetModalProps) => {
     const [value, setValue] = useState(0);
 
     const {data: testCases} = useGetTestCases(snippetId);
@@ -62,16 +64,16 @@ export const TestSnippetModal = ({open, onClose, snippetId, version}: TestSnippe
                         value={value}
                         test={testCase}
                         snippetId={snippetId}
-                        version={version}
                         setTestCase={(tc) => upsertTestCase({ ...tc, id: testCase.id })}
                         removeTestCase={(i) => removeTestCase(i)}
+                        onSelectTest={onSelectTest}
+                        onClose={onClose}
                     />
                 ))}
                 <TabPanel
                     index={testCases?.length ?? 0}
                     value={value}
                     snippetId={snippetId}
-                    version={version}
                     setTestCase={(tc) => upsertTestCase(tc)}
                 />
             </Box>
