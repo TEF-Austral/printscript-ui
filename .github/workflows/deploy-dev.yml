@@ -2,7 +2,7 @@ name: Deploy to Production
 
 on:
   push:
-    branches: [ release ]
+    branches: [ master ]
   workflow_dispatch:
 
 permissions:
@@ -50,7 +50,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Build and push Docker image (PROD)
+      - name: Build and push Docker image (DEV)
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -65,7 +65,7 @@ jobs:
       
 
       # ========== NOTIFY PROVISIONER ==========
-      - name: Notify provisioner (PROD)
+      - name: Notify provisioner (DEV)
         run: |
           curl -X POST \
             -H "Accept: application/vnd.github.v3+json" \
