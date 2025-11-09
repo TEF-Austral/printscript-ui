@@ -308,32 +308,8 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                 <Box mb={2}>
                   <Alert severity={testResult.passed ? "success" : "error"}>
                     <Typography variant="subtitle2" fontWeight="bold">
-                      Test {testResult.passed ? "Passed" : "Failed"}
+                      Test {testResult.passed ? "Passed ✅" : "Failed ❌"} - Check Output section below for details
                     </Typography>
-                    {testResult.outputs && testResult.outputs.length > 0 && (
-                        <Box mt={1}>
-                          <Typography variant="body2" fontWeight="bold">Outputs:</Typography>
-                          {testResult.outputs.map((output, idx) => (
-                              <Chip key={idx} label={output} size="small" sx={{ mr: 1, mt: 0.5 }} />
-                          ))}
-                        </Box>
-                    )}
-                    {testResult.expectedOutputs && testResult.expectedOutputs.length > 0 && (
-                        <Box mt={1}>
-                          <Typography variant="body2" fontWeight="bold">Expected Outputs:</Typography>
-                          {testResult.expectedOutputs.map((output, idx) => (
-                              <Chip key={idx} label={output} size="small" color="primary" sx={{ mr: 1, mt: 0.5 }} />
-                          ))}
-                        </Box>
-                    )}
-                    {testResult.errors && testResult.errors.length > 0 && (
-                        <Box mt={1}>
-                          <Typography variant="body2" fontWeight="bold" color="error">Errors:</Typography>
-                          {testResult.errors.map((error, idx) => (
-                              <Typography key={idx} variant="body2" color="error">{error}</Typography>
-                          ))}
-                        </Box>
-                    )}
                   </Alert>
                 </Box>
             )}
@@ -356,7 +332,60 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
             </Box>
             <Box pt={1} flex={1} marginTop={2}>
               <Alert severity="info">Output</Alert>
-              <SnippetExecution />
+              {testResult ? (
+                <Box mt={2} p={2} bgcolor="background.paper" borderRadius={1} border={1} borderColor="divider">
+                  <Typography variant="h6" fontWeight="bold" mb={2}>
+                    Test Results: {testResult.passed ? '✅ Passed' : '❌ Failed'}
+                  </Typography>
+
+                  {testResult.outputs && testResult.outputs.length > 0 && (
+                    <Box mb={2}>
+                      <Typography variant="subtitle2" fontWeight="bold" mb={1}>
+                        Actual Outputs:
+                      </Typography>
+                      <Box bgcolor="grey.900" p={2} borderRadius={1} fontFamily="monospace">
+                        {testResult.outputs.map((output, idx) => (
+                          <Typography key={idx} color="success.light" variant="body2">
+                            {output}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+
+                  {testResult.expectedOutputs && testResult.expectedOutputs.length > 0 && (
+                    <Box mb={2}>
+                      <Typography variant="subtitle2" fontWeight="bold" mb={1}>
+                        Expected Outputs:
+                      </Typography>
+                      <Box bgcolor="grey.900" p={2} borderRadius={1} fontFamily="monospace">
+                        {testResult.expectedOutputs.map((output, idx) => (
+                          <Typography key={idx} color="info.light" variant="body2">
+                            {output}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+
+                  {testResult.errors && testResult.errors.length > 0 && (
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight="bold" color="error" mb={1}>
+                        Errors:
+                      </Typography>
+                      <Box bgcolor="grey.900" p={2} borderRadius={1} fontFamily="monospace">
+                        {testResult.errors.map((error, idx) => (
+                          <Typography key={idx} color="error.light" variant="body2">
+                            {error}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              ) : (
+                <SnippetExecution />
+              )}
             </Box>
           </>
         }
