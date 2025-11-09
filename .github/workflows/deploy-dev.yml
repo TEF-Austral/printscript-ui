@@ -55,9 +55,12 @@ jobs:
         with:
           context: .
           file: ./Dockerfile.dev
+          no-cache: true
           push: true
           tags: |
             ${{ steps.image.outputs.name }}:dev
+            ${{ steps.image.outputs.name }}:dev-${{ needs.versioning.outputs.version }}
+            ${{ steps.image.outputs.name }}:dev-${{ github.sha }}
           build-args: |
             VITE_AUTH0_CLIENT_ID=${{ secrets.VITE_AUTH0_CLIENT_ID_DEV }}
             VITE_AUDIENCE=${{ secrets.VITE_AUDIENCE }}
