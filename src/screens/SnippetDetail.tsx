@@ -384,7 +384,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                   )}
                 </Box>
               ) : (
-                <SnippetExecution />
+                <SnippetExecution snippetId={id} />
               )}
             </Box>
           </>
