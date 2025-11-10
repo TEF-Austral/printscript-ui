@@ -25,34 +25,42 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
     const { getAccessTokenSilently } = useAuth0();
 
     useEffect(() => {
+        let ws: WebSocket | null = null;
+        let isMounted = true;
+
         const connect = async () => {
             try {
                 const token = await getAccessTokenSilently();
                 const wsUrl = `wss://${VITE_DOMAIN}/api/snippet/ws/execute-interactive?snippetId=${snippetId}&token=${token}`;
 
-                const ws = new WebSocket(wsUrl);
+                ws = new WebSocket(wsUrl);
 
                 ws.onopen = () => {
+                    if (!isMounted) {
+                        ws?.close();
+                        return;
+                    }
                     console.log("WebSocket conectado");
                     setSocket(ws);
                     setIsRunning(true);
-                    setOutput(prev => [...prev, "Conectado al servidor..."]);
                 };
 
                 ws.onclose = () => {
+                    if (!isMounted) return;
                     console.log("WebSocket desconectado");
                     setSocket(null);
                     setIsRunning(false);
                     setIsAwaitingInput(false);
-                    setOutput(prev => [...prev, "Desconectado del servidor."]);
                 };
 
                 ws.onerror = (err) => {
+                    if (!isMounted) return;
                     console.error("Error de WebSocket:", err);
                     setOutput(prev => [...prev, "Error de conexión."]);
                 };
 
                 ws.onmessage = (event) => {
+                    if (!isMounted) return;
                     const msg: WebSocketMessage = JSON.parse(event.data);
                     switch (msg.type) {
                         case 'Output':
@@ -63,16 +71,17 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
                             setIsAwaitingInput(true);
                             break;
                         case 'ExecutionFinished':
-                            setOutput(prev => [...prev, "Ejecución finalizada."]);
-                            ws.close();
+                            setOutput(prev => [...prev, "✅ Ejecución completada con éxito."]);
+                            ws?.close();
                             break;
                         case 'Error':
-                            setOutput(prev => [...prev, `ERROR: ${msg.value}`]);
-                            ws.close();
+                            setOutput(prev => [...prev, `❌ ERROR: ${msg.value}`]);
+                            ws?.close();
                             break;
                     }
                 };
             } catch (e) {
+                if (!isMounted) return;
                 console.error("Error al obtener token para WebSocket:", e);
                 setOutput(prev => [...prev, "Error de autenticación al conectar."]);
             }
@@ -81,8 +90,9 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
         connect();
 
         return () => {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.close();
+            isMounted = false;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close();
             }
         };
     }, [snippetId, getAccessTokenSilently]);
