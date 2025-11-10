@@ -9,7 +9,7 @@ import { TestCase } from "../types/TestCase.ts";
 import { FileType } from "../types/FileType.ts";
 import { Rule } from "../types/Rule.ts";
 import { SnippetFilters } from "../types/SnippetFilter.types.ts";
-import {TestCaseResult} from "../types/TestCaseResult.ts";
+import { TestCaseResult } from "../types/TestCaseResult.ts";
 
 export type SharePermissions = { canRead: boolean; canEdit: boolean };
 
@@ -52,6 +52,8 @@ export interface SnippetOperations {
   getTestCases(snippetId: string): Promise<TestCase[]>;
 
   formatSnippet(snippetId: string, version: string): Promise<string>;
+
+  downloadFormattedSnippet(snippetId: string, version: string): Promise<Blob>;
 
   analyzeSnippet(snippetId: string, version: string): Promise<AnalyzeResult>;
 

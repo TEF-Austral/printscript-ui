@@ -9,8 +9,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import {
   useUpdateSnippetById
 } from "../utils/queries.tsx";
-import {useFormatSnippet, useGetSnippetById, useShareSnippet, useAnalyzeSnippet, useGetTestCases, useTestSnippet} from "../utils/queries.tsx";
-import {Bòx} from "../components/snippet-table/SnippetBox.tsx";
+import {useFormatSnippet, useGetSnippetById, useShareSnippet, useAnalyzeSnippet, useGetTestCases, useTestSnippet, useDownloadFormattedSnippet} from "../utils/queries.tsx";
+import {SnippetBox} from "../components/snippet-table/SnippetBox.tsx";
 import {BugReport, Delete, Download, Save, Share, Upload, CheckCircle, PlayArrow} from "@mui/icons-material";
 import {ShareSnippetModal} from "../components/snippet-detail/ShareSnippetModal.tsx";
 import {TestSnippetModal} from "../components/snippet-test/TestSnippetModal.tsx";
@@ -34,7 +34,7 @@ const DownloadButton = ({snippet}: { snippet?: Snippet }) => {
   const file = new Blob([snippet.content], {type: 'text/plain'});
 
   return (
-      <Tooltip title={"Download"}>
+      <Tooltip title={"Download Original"}>
         <IconButton sx={{
           cursor: "pointer"
         }}>
@@ -47,6 +47,26 @@ const DownloadButton = ({snippet}: { snippet?: Snippet }) => {
           }}>
             <Download/>
           </a>
+        </IconButton>
+      </Tooltip>
+  )
+}
+
+const DownloadFormattedButton = ({snippet, onDownload, isLoading}: {
+  snippet?: Snippet;
+  onDownload: () => void;
+  isLoading: boolean;
+}) => {
+  if (!snippet) return null;
+
+  return (
+      <Tooltip title={"Download Formatted"}>
+        <IconButton
+            onClick={onDownload}
+            disabled={isLoading}
+            sx={{cursor: "pointer"}}
+        >
+          {isLoading ? <CircularProgress size={24} /> : <ReadMoreIcon />}
         </IconButton>
       </Tooltip>
   )
@@ -78,6 +98,9 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   const {mutate: updateSnippet, isLoading: isUpdateSnippetLoading} = useUpdateSnippetById({
     onSuccess: () => queryClient.invalidateQueries(['snippet', id])
   });
+
+  const {mutateAsync: downloadFormatted, isLoading: isDownloadFormattedLoading} = useDownloadFormattedSnippet();
+
   const {createSnackbar} = useSnackbarContext();
 
   useEffect(() => {
@@ -123,6 +146,26 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   const handleAnalyze = () => {
     if (!snippet) return;
     analyzeSnippet({ snippetId: id, version: snippet.version });
+  };
+
+  const handleDownloadFormatted = async () => {
+    if (!snippet) return;
+
+    try {
+      const blob = await downloadFormatted({ snippetId: id, version: snippet.version });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${snippet.name}-formatted.${snippet.extension}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      createSnackbar('success', 'Formatted snippet downloaded successfully');
+    } catch (error) {
+      createSnackbar('error', 'Error downloading formatted snippet');
+      console.error(error);
+    }
   };
 
   const validateCode = async (content: string): Promise<boolean> => {
@@ -212,6 +255,11 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                 </IconButton>
               </Tooltip>
               <DownloadButton snippet={snippet}/>
+              <DownloadFormattedButton
+                  snippet={snippet}
+                  onDownload={handleDownloadFormatted}
+                  isLoading={isDownloadFormattedLoading}
+              />
               <Tooltip title={"Load from file"}>
                 <IconButton onClick={() => fileInputRef?.current?.click()}>
                   <Upload/>
@@ -315,7 +363,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
             )}
 
             <Box display={"flex"} gap={2}>
-              <Bòx flex={1} height={"fit-content"} overflow={"none"} minHeight={"500px"} bgcolor={'black'} color={'white'} code={code}>
+              <SnippetBox flex={1} height={"fit-content"} overflow={"none"} minHeight={"500px"} bgcolor={'black'} color={'white'} code={code}>
                 <Editor
                     value={code}
                     padding={10}
@@ -328,63 +376,63 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                       fontSize: 17,
                     }}
                 />
-              </Bòx>
+              </SnippetBox>
             </Box>
             <Box pt={1} flex={1} marginTop={2}>
               <Alert severity="info">Output</Alert>
               {testResult ? (
-                <Box mt={2} p={2} bgcolor="background.paper" borderRadius={1} border={1} borderColor="divider">
-                  <Typography variant="h6" fontWeight="bold" mb={2}>
-                    Test Results: {testResult.passed ? '✅ Passed' : '❌ Failed'}
-                  </Typography>
+                  <Box mt={2} p={2} bgcolor="background.paper" borderRadius={1} border={1} borderColor="divider">
+                    <Typography variant="h6" fontWeight="bold" mb={2}>
+                      Test Results: {testResult.passed ? '✅ Passed' : '❌ Failed'}
+                    </Typography>
 
-                  {testResult.outputs && testResult.outputs.length > 0 && (
-                    <Box mb={2}>
-                      <Typography variant="subtitle2" fontWeight="bold" mb={1}>
-                        Actual Outputs:
-                      </Typography>
-                      <Box bgcolor="grey.900" p={2} borderRadius={1} fontFamily="monospace">
-                        {testResult.outputs.map((output, idx) => (
-                          <Typography key={idx} color="success.light" variant="body2">
-                            {output}
+                    {testResult.outputs && testResult.outputs.length > 0 && (
+                        <Box mb={2}>
+                          <Typography variant="subtitle2" fontWeight="bold" mb={1}>
+                            Actual Outputs:
                           </Typography>
-                        ))}
-                      </Box>
-                    </Box>
-                  )}
+                          <Box bgcolor="grey.900" p={2} borderRadius={1} fontFamily="monospace">
+                            {testResult.outputs.map((output, idx) => (
+                                <Typography key={idx} color="success.light" variant="body2">
+                                  {output}
+                                </Typography>
+                            ))}
+                          </Box>
+                        </Box>
+                    )}
 
-                  {testResult.expectedOutputs && testResult.expectedOutputs.length > 0 && (
-                    <Box mb={2}>
-                      <Typography variant="subtitle2" fontWeight="bold" mb={1}>
-                        Expected Outputs:
-                      </Typography>
-                      <Box bgcolor="grey.900" p={2} borderRadius={1} fontFamily="monospace">
-                        {testResult.expectedOutputs.map((output, idx) => (
-                          <Typography key={idx} color="info.light" variant="body2">
-                            {output}
+                    {testResult.expectedOutputs && testResult.expectedOutputs.length > 0 && (
+                        <Box mb={2}>
+                          <Typography variant="subtitle2" fontWeight="bold" mb={1}>
+                            Expected Outputs:
                           </Typography>
-                        ))}
-                      </Box>
-                    </Box>
-                  )}
+                          <Box bgcolor="grey.900" p={2} borderRadius={1} fontFamily="monospace">
+                            {testResult.expectedOutputs.map((output, idx) => (
+                                <Typography key={idx} color="info.light" variant="body2">
+                                  {output}
+                                </Typography>
+                            ))}
+                          </Box>
+                        </Box>
+                    )}
 
-                  {testResult.errors && testResult.errors.length > 0 && (
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight="bold" color="error" mb={1}>
-                        Errors:
-                      </Typography>
-                      <Box bgcolor="grey.900" p={2} borderRadius={1} fontFamily="monospace">
-                        {testResult.errors.map((error, idx) => (
-                          <Typography key={idx} color="error.light" variant="body2">
-                            {error}
+                    {testResult.errors && testResult.errors.length > 0 && (
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight="bold" color="error" mb={1}>
+                            Errors:
                           </Typography>
-                        ))}
-                      </Box>
-                    </Box>
-                  )}
-                </Box>
+                          <Box bgcolor="grey.900" p={2} borderRadius={1} fontFamily="monospace">
+                            {testResult.errors.map((error, idx) => (
+                                <Typography key={idx} color="error.light" variant="body2">
+                                  {error}
+                                </Typography>
+                            ))}
+                          </Box>
+                        </Box>
+                    )}
+                  </Box>
               ) : (
-                <SnippetExecution snippetId={id} />
+                  <SnippetExecution snippetId={id} />
               )}
             </Box>
           </>
