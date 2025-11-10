@@ -1,4 +1,4 @@
-import {Bòx} from "../components/snippet-table/SnippetBox.tsx";
+import {SnippetBox} from "../components/snippet-table/SnippetBox.tsx";
 import Editor from "react-simple-code-editor";
 import {highlight, languages} from "prismjs";
 import {OutlinedInput} from "@mui/material";
@@ -53,11 +53,9 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
 
             switch (msg.type) {
                 case 'Output':
-                    // Visualizar outputs a medida que son evaluados
                     setOutput(prev => [...prev, msg.value ?? '']);
                     break;
                 case 'InputRequest':
-                    // Proporcionar inputs a medida que son pedidos
                     setOutput(prev => [...prev, msg.prompt ?? 'Esperando entrada...']);
                     setIsAwaitingInput(true);
                     break;
@@ -71,8 +69,6 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
                     break;
             }
         };
-
-        // Función de limpieza al desmontar el componente
         return () => {
             if (ws.readyState === WebSocket.OPEN) {
                 ws.close();
@@ -98,7 +94,7 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
 
     return (
         <>
-            <Bòx flex={1} overflow={"auto"} minHeight={400} bgcolor={'black'} color={'white'} code={code}>
+            <SnippetBox flex={1} overflow={"auto"} minHeight={400} bgcolor={'black'} color={'white'} code={code}>
                 <Editor
                     value={code}
                     padding={10}
@@ -111,7 +107,7 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
                         minHeight: '400px'
                     }}
                 />
-            </Bòx>
+            </SnippetBox>
             <OutlinedInput
                 onKeyDown={handleEnter}
                 value={input}
