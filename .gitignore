@@ -27,4 +27,4 @@ dist-ssr
 next-env.d.ts
 .next
 
-.index.html
+index.html
