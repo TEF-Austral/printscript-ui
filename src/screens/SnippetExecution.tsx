@@ -1,8 +1,8 @@
 import {SnippetBox} from "../components/snippet-table/SnippetBox.tsx";
 import Editor from "react-simple-code-editor";
 import {highlight, languages} from "prismjs";
-import {OutlinedInput} from "@mui/material";
-import {useEffect, useState} from "react";
+import {Button, OutlinedInput, Stack} from "@mui/material";
+import {useEffect, useRef, useState} from "react";
 import {VITE_DOMAIN} from "../utils/constants.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 
@@ -22,18 +22,25 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [isRunning, setIsRunning] = useState<boolean>(false);
     const [isAwaitingInput, setIsAwaitingInput] = useState<boolean>(false);
+    const [executionKey, setExecutionKey] = useState<number>(0);
     const { getAccessTokenSilently } = useAuth0();
+    const wsRef = useRef<WebSocket | null>(null);
 
     useEffect(() => {
-        let ws: WebSocket | null = null;
         let isMounted = true;
 
         const connect = async () => {
             try {
+                // Cerrar conexión anterior si existe
+                if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                    wsRef.current.close();
+                }
+
                 const token = await getAccessTokenSilently();
                 const wsUrl = `wss://${VITE_DOMAIN}/api/snippet/ws/execute-interactive?snippetId=${snippetId}&token=${token}`;
 
-                ws = new WebSocket(wsUrl);
+                const ws = new WebSocket(wsUrl);
+                wsRef.current = ws;
 
                 ws.onopen = () => {
                     if (!isMounted) {
@@ -91,11 +98,11 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
 
         return () => {
             isMounted = false;
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.close();
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.close();
             }
         };
-    }, [snippetId, getAccessTokenSilently]);
+    }, [snippetId, getAccessTokenSilently, executionKey]);
 
     const code = output.join("\n");
 
@@ -110,6 +117,21 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
             setInput("");
             setIsAwaitingInput(false);
         }
+    };
+
+    const handleRestart = () => {
+        // Cerrar WebSocket actual
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.close();
+        }
+        // Limpiar estado
+        setOutput([]);
+        setInput("");
+        setIsAwaitingInput(false);
+        setIsRunning(false);
+        setSocket(null);
+        // Incrementar key para reiniciar useEffect
+        setExecutionKey(prev => prev + 1);
     };
 
     return (
@@ -128,14 +150,24 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
                     }}
                 />
             </SnippetBox>
-            <OutlinedInput
-                onKeyDown={handleEnter}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder={isAwaitingInput ? "Escribe tu entrada aquí..." : "La ejecución no está esperando una entrada"}
-                fullWidth
-                disabled={!isAwaitingInput || !isRunning}
-            />
+            <Stack direction="row" spacing={2} alignItems="center">
+                <OutlinedInput
+                    onKeyDown={handleEnter}
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    placeholder={isAwaitingInput ? "Escribe tu entrada aquí..." : "La ejecución no está esperando una entrada"}
+                    fullWidth
+                    disabled={!isAwaitingInput || !isRunning}
+                />
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleRestart}
+                    sx={{ minWidth: '150px', whiteSpace: 'nowrap' }}
+                >
+                    🔄 Reiniciar
+                </Button>
+            </Stack>
         </>
     );
 };
