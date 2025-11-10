@@ -74,7 +74,7 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
                             setOutput(prev => [...prev, msg.value ?? '']);
                             break;
                         case 'InputRequest':
-                            setOutput(prev => [...prev, msg.prompt ?? 'Esperando entrada...']);
+                            // setOutput(prev => [...prev, msg.prompt ?? 'Esperando entrada...']);
                             setIsAwaitingInput(true);
                             break;
                         case 'ExecutionFinished':
