@@ -4,8 +4,7 @@ import {highlight, languages} from "prismjs";
 import {OutlinedInput} from "@mui/material";
 import {useEffect, useState} from "react";
 import {VITE_DOMAIN} from "../utils/constants.ts";
-
-
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface WebSocketMessage {
     type: 'Output' | 'InputRequest' | 'ExecutionFinished' | 'Error';
@@ -23,73 +22,80 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [isRunning, setIsRunning] = useState<boolean>(false);
     const [isAwaitingInput, setIsAwaitingInput] = useState<boolean>(false);
+    const { getAccessTokenSilently } = useAuth0();
 
     useEffect(() => {
+        const connect = async () => {
+            try {
+                const token = await getAccessTokenSilently();
+                const wsUrl = `wss://${VITE_DOMAIN}/api/snippet/ws/execute-interactive?snippetId=${snippetId}&token=${token}`;
 
-        const ws = new WebSocket(`wss://${VITE_DOMAIN}/api/snippet/ws/execute-interactive?snippetId=${snippetId}`);
+                const ws = new WebSocket(wsUrl);
 
-        ws.onopen = () => {
-            console.log("WebSocket conectado");
-            setSocket(ws);
-            setIsRunning(true);
-            setOutput(prev => [...prev, "Conectado al servidor..."]);
-        };
+                ws.onopen = () => {
+                    console.log("WebSocket conectado");
+                    setSocket(ws);
+                    setIsRunning(true);
+                    setOutput(prev => [...prev, "Conectado al servidor..."]);
+                };
 
-        ws.onclose = () => {
-            console.log("WebSocket desconectado");
-            setSocket(null);
-            setIsRunning(false);
-            setIsAwaitingInput(false);
-            setOutput(prev => [...prev, "Desconectado del servidor."]);
-        };
+                ws.onclose = () => {
+                    console.log("WebSocket desconectado");
+                    setSocket(null);
+                    setIsRunning(false);
+                    setIsAwaitingInput(false);
+                    setOutput(prev => [...prev, "Desconectado del servidor."]);
+                };
 
-        ws.onerror = (err) => {
-            console.error("Error de WebSocket:", err);
-            setOutput(prev => [...prev, "Error de conexión."]);
-        };
+                ws.onerror = (err) => {
+                    console.error("Error de WebSocket:", err);
+                    setOutput(prev => [...prev, "Error de conexión."]);
+                };
 
-        ws.onmessage = (event) => {
-            const msg: WebSocketMessage = JSON.parse(event.data);
-
-            switch (msg.type) {
-                case 'Output':
-                    // Visualizar outputs a medida que son evaluados
-                    setOutput(prev => [...prev, msg.value ?? '']);
-                    break;
-                case 'InputRequest':
-                    // Proporcionar inputs a medida que son pedidos
-                    setOutput(prev => [...prev, msg.prompt ?? 'Esperando entrada...']);
-                    setIsAwaitingInput(true);
-                    break;
-                case 'ExecutionFinished':
-                    setOutput(prev => [...prev, "Ejecución finalizada."]);
-                    ws.close();
-                    break;
-                case 'Error':
-                    setOutput(prev => [...prev, `ERROR: ${msg.value}`]);
-                    ws.close();
-                    break;
+                ws.onmessage = (event) => {
+                    const msg: WebSocketMessage = JSON.parse(event.data);
+                    switch (msg.type) {
+                        case 'Output':
+                            setOutput(prev => [...prev, msg.value ?? '']);
+                            break;
+                        case 'InputRequest':
+                            setOutput(prev => [...prev, msg.prompt ?? 'Esperando entrada...']);
+                            setIsAwaitingInput(true);
+                            break;
+                        case 'ExecutionFinished':
+                            setOutput(prev => [...prev, "Ejecución finalizada."]);
+                            ws.close();
+                            break;
+                        case 'Error':
+                            setOutput(prev => [...prev, `ERROR: ${msg.value}`]);
+                            ws.close();
+                            break;
+                    }
+                };
+            } catch (e) {
+                console.error("Error al obtener token para WebSocket:", e);
+                setOutput(prev => [...prev, "Error de autenticación al conectar."]);
             }
         };
 
-        // Función de limpieza al desmontar el componente
+        connect();
+
         return () => {
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.close();
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.close();
             }
         };
-    }, [snippetId]);
+    }, [snippetId, getAccessTokenSilently]);
 
     const code = output.join("\n");
 
     const handleEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter' && isAwaitingInput && socket && input.trim() !== "") {
             const response = {
-                type: 'input_response',
+                type: 'InputResponse',
                 value: input
             };
             socket.send(JSON.stringify(response));
-
             setOutput(prev => [...prev, `> ${input}`]);
             setInput("");
             setIsAwaitingInput(false);
