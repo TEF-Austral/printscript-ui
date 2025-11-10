@@ -1,4 +1,4 @@
-import {Bòx} from "../components/snippet-table/SnippetBox.tsx";
+import {SnippetBox} from "../components/snippet-table/SnippetBox.tsx";
 import Editor from "react-simple-code-editor";
 import {highlight, languages} from "prismjs";
 import {OutlinedInput} from "@mui/material";
@@ -104,7 +104,7 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
 
     return (
         <>
-            <Bòx flex={1} overflow={"auto"} minHeight={400} bgcolor={'black'} color={'white'} code={code}>
+            <SnippetBox flex={1} overflow={"auto"} minHeight={400} bgcolor={'black'} color={'white'} code={code}>
                 <Editor
                     value={code}
                     padding={10}
@@ -117,7 +117,7 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
                         minHeight: '400px'
                     }}
                 />
-            </Bòx>
+            </SnippetBox>
             <OutlinedInput
                 onKeyDown={handleEnter}
                 value={input}

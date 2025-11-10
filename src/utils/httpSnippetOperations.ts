@@ -230,6 +230,31 @@ export class HttpSnippetOperations implements SnippetOperations {
     return res.text();
   }
 
+  async downloadFormattedSnippet(snippetId: string, version: string): Promise<Blob> {
+    const token = await this.getToken();
+
+    const params = new URLSearchParams({
+      snippetId: snippetId,
+      version: version,
+    });
+
+    const url = `${this.snippetUrl}/format/download?${params.toString()}`;
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`Download formatted failed - HTTP ${res.status}: ${txt}`);
+    }
+
+    return res.blob();
+  }
+
   async analyzeSnippet(
       snippetId: string,
       version: string,
@@ -354,7 +379,6 @@ export class HttpSnippetOperations implements SnippetOperations {
     }
     return this.createTestCase(testCase);
   }
-
 
   async updateTestCase(id: string, testCase: Partial<TestCase>): Promise<TestCase> {
     const payload = {

@@ -6,7 +6,6 @@ import {TestCase} from "../types/TestCase.ts";
 import {FileType} from "../types/FileType.ts";
 import {Rule} from "../types/Rule.ts";
 import {useAuth0} from "@auth0/auth0-react";
-//import {useEffect} from "react";
 
 import {HttpSnippetOperations} from "./httpSnippetOperations.ts";
 import {defaultFilters, SnippetFilters} from "../types/SnippetFilter.types.ts";
@@ -14,14 +13,6 @@ import {TestCaseResult} from "../types/TestCaseResult.ts";
 
 export const useSnippetsOperations = () => {
     const {getAccessTokenSilently} = useAuth0()
-
-    // useEffect(() => {
-    //     getAccessTokenSilently()
-    //         .then(token => {
-    //             console.log(token)
-    //         })
-    //         .catch(error => console.error(error));
-    // });
 
     const snippetOperations: SnippetOperations = new HttpSnippetOperations(
         async () => {
@@ -126,7 +117,6 @@ export const useUpsertTestCase = ({ onSuccess }: { onSuccess?: (data: TestCase) 
             if (typeof (snippetOperations as any).upsertTestCase === 'function') {
                 return (snippetOperations as any).upsertTestCase(tc);
             }
-            // fallback to create when upsert not implemented
             return snippetOperations.postTestCase(tc);
         },
         { onSuccess }
@@ -188,7 +178,6 @@ export const useModifyLintingRules = ({onSuccess}: { onSuccess: () => void }) =>
     );
 }
 
-// Updated: Now takes snippetId and version instead of content
 export const useFormatSnippet = () => {
     const snippetOperations = useSnippetsOperations()
 
@@ -197,7 +186,14 @@ export const useFormatSnippet = () => {
     );
 }
 
-// New: Hook for analyzing snippets
+export const useDownloadFormattedSnippet = () => {
+    const snippetOperations = useSnippetsOperations()
+
+    return useMutation<Blob, Error, { snippetId: string; version: string }>(
+        ({ snippetId, version }) => snippetOperations.downloadFormattedSnippet(snippetId, version)
+    );
+}
+
 export const useAnalyzeSnippet = () => {
     const snippetOperations = useSnippetsOperations()
 
