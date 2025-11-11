@@ -6,6 +6,9 @@ export default defineConfig({
   e2e: {
     experimentalStudio: true,
     baseUrl: process.env.VITE_FRONTEND_URL,
+    defaultCommandTimeout: 10000,
+    pageLoadTimeout: 30000,
+    chromeWebSecurity: false,
 
     setupNodeEvents(_, config) {
       config.env = {
