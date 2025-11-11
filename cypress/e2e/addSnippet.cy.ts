@@ -1,11 +1,12 @@
 import {SNIPPET_URL} from "../../src/utils/constants";
+
 describe('Add snippet tests', () => {
   beforeEach(() => {
-    cy.loginToAuth0(
-        Cypress.env('auth0_username'),
-        Cypress.env('auth0_password')
-    );
-  });
+    // cy.loginToAuth0(
+    //     AUTH0_USERNAME,
+    //     AUTH0_PASSWORD
+    // )
+  })
   it('Can add snippets manually', () => {
     cy.visit("/")
     cy.intercept('POST', SNIPPET_URL+"/snippets", (req) => {

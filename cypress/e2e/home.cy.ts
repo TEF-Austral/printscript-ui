@@ -1,13 +1,13 @@
-import {SNIPPET_URL, FRONTEND_URL} from "../../src/utils/constants";
+import { SNIPPET_URL, FRONTEND_URL} from "../../src/utils/constants"; //AUTH0_PASSWORD, AUTH0_USERNAME,
 import {CreateSnippet} from "../../src/utils/snippet";
 
 describe('Home', () => {
   beforeEach(() => {
-    cy.loginToAuth0(
-        Cypress.env('auth0_username'),
-        Cypress.env('auth0_password')
-    );
-  });
+    // cy.loginToAuth0( TODO DE-Comment when auth0 is ready
+    //     AUTH0_USERNAME,
+    //     AUTH0_PASSWORD
+    // )
+  })
   before(() => {
     process.env.FRONTEND_URL = Cypress.env("FRONTEND_URL");
     process.env.BACKEND_URL = Cypress.env("BACKEND_URL");
@@ -36,11 +36,9 @@ describe('Home', () => {
     cy.visit(FRONTEND_URL)
     const snippetData: CreateSnippet = {
       name: "Test name",
-      content: "println(1)",
+      content: "print(1)",
       language: "printscript",
-      extension: ".ps",
-      description: "test snippet",
-      version: "1.0"
+      extension: ".ps"
     }
 
     cy.intercept('GET', SNIPPET_URL+"/snippets*", (req) => {
