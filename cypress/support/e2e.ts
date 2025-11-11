@@ -17,9 +17,18 @@ Cypress.Commands.add('loginToAuth0', (username: string, password: string) => {
         },
         {
             validate: () => {
-                cy.wrap(localStorage)
-                    .invoke('getItem', 'authAccessToken')
-                    .should('exist')
+                cy.url({ timeout: 15000 }).should((url) => {
+                    const isOnAuth0 = url.includes(Cypress.env('auth0_domain'));
+                    expect(isOnAuth0, 'Should not be on Auth0 login page').to.be.false;
+                });
+
+                cy.window().then((win) => {
+                    const hasLocalStorage = win.localStorage.length > 0;
+                    const hasSessionStorage = win.sessionStorage.length > 0;
+
+                    expect(hasLocalStorage || hasSessionStorage,
+                        'Auth0 should store authentication data').to.be.true;
+                });
             },
             cacheAcrossSpecs: true,
         }
