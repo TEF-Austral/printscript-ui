@@ -53,8 +53,6 @@ export interface SnippetOperations {
 
   formatSnippet(snippetId: string, version: string): Promise<string>;
 
-  downloadFormattedSnippet(snippetId: string, version: string): Promise<Blob>;
-
   analyzeSnippet(snippetId: string, version: string): Promise<AnalyzeResult>;
 
   compileSnippet(snippetId: string, version: string): Promise<AnalyzeResult>;
