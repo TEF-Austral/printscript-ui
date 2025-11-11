@@ -186,14 +186,6 @@ export const useFormatSnippet = () => {
     );
 }
 
-export const useDownloadFormattedSnippet = () => {
-    const snippetOperations = useSnippetsOperations()
-
-    return useMutation<Blob, Error, { snippetId: string; version: string }>(
-        ({ snippetId, version }) => snippetOperations.downloadFormattedSnippet(snippetId, version)
-    );
-}
-
 export const useAnalyzeSnippet = () => {
     const snippetOperations = useSnippetsOperations()
 
