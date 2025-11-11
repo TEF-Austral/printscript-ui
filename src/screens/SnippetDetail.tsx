@@ -14,11 +14,11 @@ import {SnippetBox} from "../components/snippet-table/SnippetBox.tsx";
 import {BugReport, Delete, Download, Save, Share, Upload, CheckCircle, PlayArrow} from "@mui/icons-material";
 import {ShareSnippetModal} from "../components/snippet-detail/ShareSnippetModal.tsx";
 import {TestSnippetModal} from "../components/snippet-test/TestSnippetModal.tsx";
-import {Snippet} from "../utils/snippet.ts";
 import {SnippetExecution} from "./SnippetExecution.tsx";
 import ReadMoreIcon from '@mui/icons-material/ReadMore';
 import {queryClient} from "../App.tsx";
 import {DeleteConfirmationModal} from "../components/snippet-detail/DeleteConfirmationModal.tsx";
+import {DownloadModal} from "../components/snippet-detail/DownloadModal.tsx";
 import {useSnackbarContext} from "../contexts/snackbarContext.tsx";
 import { SharePermissions } from "../utils/snippetOperations";
 import {useSnippetsOperations} from "../utils/queries.tsx";
@@ -29,54 +29,13 @@ type SnippetDetailProps = {
   handleCloseModal: () => void;
 }
 
-const DownloadButton = ({snippet}: { snippet?: Snippet }) => {
-  if (!snippet) return null;
-  const file = new Blob([snippet.content], {type: 'text/plain'});
-
-  return (
-      <Tooltip title={"Download Original"}>
-        <IconButton sx={{
-          cursor: "pointer"
-        }}>
-          <a download={`${snippet.name}.${snippet.extension}`} target="_blank"
-             rel="noreferrer" href={URL.createObjectURL(file)} style={{
-            textDecoration: "none",
-            color: "inherit",
-            display: 'flex',
-            alignItems: 'center',
-          }}>
-            <Download/>
-          </a>
-        </IconButton>
-      </Tooltip>
-  )
-}
-
-const DownloadFormattedButton = ({snippet, onDownload, isLoading}: {
-  snippet?: Snippet;
-  onDownload: () => void;
-  isLoading: boolean;
-}) => {
-  if (!snippet) return null;
-
-  return (
-      <Tooltip title={"Download Formatted"}>
-        <IconButton
-            onClick={onDownload}
-            disabled={isLoading}
-            sx={{cursor: "pointer"}}
-        >
-          {isLoading ? <CircularProgress size={24} /> : <ReadMoreIcon />}
-        </IconButton>
-      </Tooltip>
-  )
-}
 
 export const SnippetDetail = (props: SnippetDetailProps) => {
   const {id, handleCloseModal} = props;
   const [code, setCode] = useState("");
   const [shareModalOppened, setShareModalOppened] = useState(false);
   const [deleteConfirmationModalOpen, setDeleteConfirmationModalOpen] = useState(false);
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
   const [testModalOpened, setTestModalOpened] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isValidating, setIsValidating] = useState(false);
@@ -146,6 +105,21 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   const handleAnalyze = () => {
     if (!snippet) return;
     analyzeSnippet({ snippetId: id, version: snippet.version });
+  };
+
+  const handleDownloadOriginal = () => {
+    if (!snippet) return;
+
+    const file = new Blob([snippet.content], {type: 'text/plain'});
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${snippet.name}.${snippet.extension}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    createSnackbar('success', 'Snippet downloaded successfully');
   };
 
   const handleDownloadFormatted = async () => {
@@ -254,12 +228,11 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                   <BugReport/>
                 </IconButton>
               </Tooltip>
-              <DownloadButton snippet={snippet}/>
-              <DownloadFormattedButton
-                  snippet={snippet}
-                  onDownload={handleDownloadFormatted}
-                  isLoading={isDownloadFormattedLoading}
-              />
+              <Tooltip title={"Download"}>
+                <IconButton onClick={() => setDownloadModalOpen(true)}>
+                  <Download/>
+                </IconButton>
+              </Tooltip>
               <Tooltip title={"Load from file"}>
                 <IconButton onClick={() => fileInputRef?.current?.click()}>
                   <Upload/>
@@ -450,6 +423,16 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
             />
         )}
         <DeleteConfirmationModal open={deleteConfirmationModalOpen} onClose={() => setDeleteConfirmationModalOpen(false)} id={snippet?.id ?? ""} setCloseDetails={handleCloseModal} />
+        {snippet && (
+            <DownloadModal
+                open={downloadModalOpen}
+                onClose={() => setDownloadModalOpen(false)}
+                snippet={snippet}
+                onDownloadOriginal={handleDownloadOriginal}
+                onDownloadFormatted={handleDownloadFormatted}
+                isLoadingFormatted={isDownloadFormattedLoading}
+            />
+        )}
         <input
             hidden
             type="file"
