@@ -1,4 +1,4 @@
-import dotenv from 'dotenv'
+import * as dotenv from 'dotenv';
 import { defineConfig } from "cypress";
 dotenv.config()
 

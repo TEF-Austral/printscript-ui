@@ -1,5 +1,4 @@
 export function loginViaAuth0Ui(username: string, password: string) {
-    cy.visit('/')
     cy.origin(
         Cypress.env('auth0_domain'),
         { args: { username, password } },

@@ -28,6 +28,7 @@ Cypress.Commands.add('loginToAuth0', (username: string, password: string) => {
   cy.session(
       `auth0-${username}`,
       () => {
+        cy.visit('/')
         loginViaAuth0Ui(username, password)
       },
       {
