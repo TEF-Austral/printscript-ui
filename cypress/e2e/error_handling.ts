@@ -1,5 +1,4 @@
-const SNIPPET_URL = Cypress.env('VITE_BACKEND_URL') ?? "/api/snippet";
-
+import {SNIPPET_URL} from "../../src/utils/constants";
 describe('Error Handling', () => {
   beforeEach(() => {
     cy.visit("/");

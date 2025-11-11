@@ -1,3 +1,4 @@
+import {SNIPPET_URL} from "../../src/utils/constants";
 describe('Snippet Format and Analysis', () => {
   beforeEach(() => {
     cy.visit("/");

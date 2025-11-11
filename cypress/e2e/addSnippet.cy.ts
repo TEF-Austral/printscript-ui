@@ -1,5 +1,4 @@
 import {SNIPPET_URL} from "../../src/utils/constants";
-
 describe('Add snippet tests', () => {
   beforeEach(() => {
     cy.loginToAuth0(

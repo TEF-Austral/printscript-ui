@@ -1,5 +1,4 @@
-const PRINTSCRIPT_URL = Cypress.env('VITE_PRINTSCRIPT_URL') ?? "/api/printscript";
-
+import {PRINTSCRIPT_URL} from "../../src/utils/constants";
 describe('Rules Management', () => {
   beforeEach(() => {
     cy.visit("/rules");

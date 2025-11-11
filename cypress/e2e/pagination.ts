@@ -1,3 +1,4 @@
+import {SNIPPET_URL} from "../../src/utils/constants";
 describe('Pagination', () => {
   beforeEach(() => {
     cy.visit("/");

@@ -1,4 +1,4 @@
-import { SNIPPET_URL, FRONTEND_URL} from "../../src/utils/constants"; //AUTH0_PASSWORD, AUTH0_USERNAME,
+import {SNIPPET_URL, FRONTEND_URL} from "../../src/utils/constants";
 import {CreateSnippet} from "../../src/utils/snippet";
 
 describe('Home', () => {
@@ -36,9 +36,11 @@ describe('Home', () => {
     cy.visit(FRONTEND_URL)
     const snippetData: CreateSnippet = {
       name: "Test name",
-      content: "print(1)",
+      content: "println(1)",
       language: "printscript",
-      extension: ".ps"
+      extension: ".ps",
+      description: "test snippet",
+      version: "1.0"
     }
 
     cy.intercept('GET', SNIPPET_URL+"/snippets*", (req) => {
