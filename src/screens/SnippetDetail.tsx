@@ -9,7 +9,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import {
   useUpdateSnippetById
 } from "../utils/queries.tsx";
-import {useFormatSnippet, useGetSnippetById, useShareSnippet, useAnalyzeSnippet, useGetTestCases, useTestSnippet, useDownloadFormattedSnippet} from "../utils/queries.tsx";
+import {useFormatSnippet, useGetSnippetById, useShareSnippet, useAnalyzeSnippet, useGetTestCases, useTestSnippet} from "../utils/queries.tsx";
 import {SnippetBox} from "../components/snippet-table/SnippetBox.tsx";
 import {BugReport, Delete, Download, Save, Share, Upload, CheckCircle, PlayArrow} from "@mui/icons-material";
 import {ShareSnippetModal} from "../components/snippet-detail/ShareSnippetModal.tsx";
@@ -48,7 +48,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   const {data: testCases} = useGetTestCases(id);
   const {mutate: shareSnippet, isLoading: loadingShare} = useShareSnippet();
 
-  const {mutate: formatSnippet, isLoading: isFormatLoading, data: formatSnippetData} = useFormatSnippet();
+  const {mutate: formatSnippet, mutateAsync: formatSnippetAsync, isLoading: isFormatLoading, data: formatSnippetData} = useFormatSnippet();
 
   const {mutate: analyzeSnippet, isLoading: isAnalyzeLoading, data: analyzeResult} = useAnalyzeSnippet();
 
@@ -58,7 +58,6 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
     onSuccess: () => queryClient.invalidateQueries(['snippet', id])
   });
 
-  const {mutateAsync: downloadFormatted, isLoading: isDownloadFormattedLoading} = useDownloadFormattedSnippet();
 
   const {createSnackbar} = useSnackbarContext();
 
@@ -126,7 +125,8 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
     if (!snippet) return;
 
     try {
-      const blob = await downloadFormatted({ snippetId: id, version: snippet.version });
+      const formattedContent = await formatSnippetAsync({ snippetId: id, version: snippet.version });
+      const blob = new Blob([formattedContent], {type: 'text/plain'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -430,7 +430,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                 snippet={snippet}
                 onDownloadOriginal={handleDownloadOriginal}
                 onDownloadFormatted={handleDownloadFormatted}
-                isLoadingFormatted={isDownloadFormattedLoading}
+                isLoadingFormatted={isFormatLoading}
             />
         )}
         <input

@@ -35,6 +35,7 @@ jobs:
           VITE_AUTH0_DOMAIN: ${{ secrets.VITE_AUTH0_DOMAIN }}
           VITE_AUTH0_CLIENT_ID: ${{ secrets.VITE_AUTH0_CLIENT_ID_DEV }}
           VITE_AUDIENCE: ${{ secrets.VITE_AUDIENCE }}
+          VITE_DOMAIN: ${{ secrets.VITE_DOMAIN }}
         run: npm run build # Ejecuta 'tsc && vite build'
 
       # ========== BUILD & PUSH DOCKER ==========
