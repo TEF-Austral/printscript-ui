@@ -9,13 +9,10 @@
     ;window.NREUM||(NREUM={});NREUM.init={
       distributed_tracing: {
         enabled: true,
-        /* -- FIX --
-        These lines are the fix. They tell the browser agent to add tracing headers
-        to requests going to your specific backend and auth domains.
-        */
         cors_use_newrelic_header: true,
         cors_use_tracecontext_headers: true,
         allowed_origins: [
+          'https://printscript.duckdns.org',
           'https://tef-austral.com',
           'https://tef-austral.us.auth0.com'
         ]
