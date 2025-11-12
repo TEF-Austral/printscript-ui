@@ -17,7 +17,9 @@ export const useSnippetsOperations = () => {
     const snippetOperations: SnippetOperations = new HttpSnippetOperations(
         async () => {
             try {
-                return await getAccessTokenSilently();
+                const token = getAccessTokenSilently();
+                console.log(token)
+                return await token;
             } catch (error) {
                 console.error("Error getting token:", error);
                 throw error;
