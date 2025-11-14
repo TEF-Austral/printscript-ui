@@ -11,6 +11,5 @@ export const AUTH0_PASSWORD =
 export const PRINTSCRIPT_URL =
     (import.meta.env && import.meta.env.VITE_PRINTSCRIPT_URL) ?? "/api/language";
 console.log(import.meta.env && import.meta.env.VITE_DOMAIN);
-
 export const VITE_DOMAIN =
     (import.meta.env && import.meta.env.VITE_DOMAIN) ?? "printscript.duckdns.org";
