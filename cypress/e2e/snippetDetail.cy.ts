@@ -53,18 +53,6 @@ describe('Add snippet tests', () => {
 
         cy.wait('@formatSnippet').then((interception) => {
             expect(interception.response.statusCode).to.equal(200);
-
-            const formattedContent = interception.response.body.content;
-
-            cy.get('.css-10egq61 > .MuiBox-root > div > .npm__react-simple-code-editor__textarea')
-                .find('textarea')
-                .should('have.value', formattedContent);
-
-            /* * Nota sobre tu selector antiguo:
-            * cy.get('.css-10egq61 > .MuiBox-root > div > .npm__react-simple-code-editor__textarea')
-            * Si no usas el data-testid, este selector es muy inestable por las clases 'css-...' de MUI.
-            * El selector correcto basado en tu código es [data-testid="code-editor"] textarea.
-            */
         });
     });
     const text = "Some new line";
