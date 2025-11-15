@@ -1,11 +1,11 @@
 import {SnippetBox} from "../components/snippet-table/SnippetBox.tsx";
 import Editor from "react-simple-code-editor";
 import {highlight, languages} from "prismjs";
-import {Button, OutlinedInput, Stack} from "@mui/material";
-import {useEffect, useRef, useState} from "react";
+import {OutlinedInput, Tooltip, IconButton, Box} from "@mui/material";
+import {useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback} from "react";
 import {VITE_DOMAIN} from "../utils/constants.ts";
 import {useAuth0} from "@auth0/auth0-react";
-import {PlayArrow, RestartAlt} from "@mui/icons-material";
+import {RestartAlt} from "@mui/icons-material";
 
 interface WebSocketMessage {
     type: 'Output' | 'InputRequest' | 'ExecutionFinished' | 'Error';
@@ -17,7 +17,12 @@ interface SnippetExecutionProps {
     snippetId: string;
 }
 
-export const SnippetExecution = ({snippetId}: SnippetExecutionProps) => {
+export interface SnippetExecutionHandle {
+    start: () => void;
+    restart: () => void;
+}
+
+export const SnippetExecution = forwardRef<SnippetExecutionHandle, SnippetExecutionProps>(({snippetId}: SnippetExecutionProps, ref) => {
     const [input, setInput] = useState<string>("");
     const [output, setOutput] = useState<string[]>([]);
     const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -39,7 +44,7 @@ export const SnippetExecution = ({snippetId}: SnippetExecutionProps) => {
         };
     }, []);
 
-    const startExecution = async () => {
+    const startExecution = useCallback(async () => {
         try {
             if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                 wsRef.current.close();
@@ -106,7 +111,7 @@ export const SnippetExecution = ({snippetId}: SnippetExecutionProps) => {
             console.error("Error obtaining token for WebSocket:", e);
             setOutput(prev => [...prev, "Authentication error while connecting."]);
         }
-    };
+    }, [getAccessTokenSilently, snippetId]);
 
 
     const code = output.join("\n");
@@ -124,7 +129,7 @@ export const SnippetExecution = ({snippetId}: SnippetExecutionProps) => {
         }
     };
 
-    const handleRestart = () => {
+    const handleRestart = useCallback(() => {
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
             wsRef.current.close();
         }
@@ -134,60 +139,53 @@ export const SnippetExecution = ({snippetId}: SnippetExecutionProps) => {
         setIsRunning(false);
         setSocket(null);
         setHasStarted(false);
-    };
+    }, []);
+
+    useImperativeHandle(ref, () => ({
+        start: () => {
+            if (isRunning) return;
+            startExecution();
+        },
+        restart: () => handleRestart()
+    }), [isRunning, startExecution, handleRestart]);
 
     return (
         <>
-            <SnippetBox flex={1} overflow={"auto"} minHeight={400} bgcolor={'black'} color={'white'} code={code}>
-                <Editor
-                    value={code}
-                    padding={10}
-                    onValueChange={() => {
-                    }}
-                    readOnly={true}
-                    highlight={(code) => highlight(code, languages.js, 'javascript')}
-                    style={{
-                        fontFamily: "monospace",
-                        fontSize: 17,
-                        minHeight: '400px'
-                    }}
-                />
-            </SnippetBox>
-            <Stack direction="row" spacing={2} alignItems="center">
-                {!hasStarted ? (
-                    <Button
-                        variant="contained"
-                        color="success"
-                        onClick={startExecution}
-                        startIcon={<PlayArrow/>}
-                        aria-label="Run"
-                        sx={{minWidth: '150px', whiteSpace: 'nowrap'}}
-                    >
-                        Run
-                    </Button>
-                ) : (
-                    <>
-                        <OutlinedInput
-                            onKeyDown={handleEnter}
-                            value={input}
-                            onChange={e => setInput(e.target.value)}
-                            placeholder={isAwaitingInput ? "Type your input here..." : "Execution is not awaiting input"}
-                            fullWidth
-                            disabled={!isAwaitingInput || !isRunning}
-                        />
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={handleRestart}
-                            startIcon={<RestartAlt/>}
-                            aria-label="Restart"
-                            sx={{minWidth: '150px', whiteSpace: 'nowrap'}}
-                        >
-                            Restart
-                        </Button>
-                    </>
-                )}
-            </Stack>
+            <Box width="100%">
+                <Box display="flex" justifyContent="flex-end" gap={1} mb={1}>
+                    {hasStarted && (
+                        <Tooltip title="Restart interactive execution">
+                            <IconButton onClick={handleRestart} aria-label="Restart" data-testid="restart-execution-button">
+                                <RestartAlt />
+                            </IconButton>
+                        </Tooltip>
+                    )}
+                </Box>
+                <SnippetBox flex={1} overflow={"auto"} minHeight={400} bgcolor={'black'} color={'white'} code={code}>
+                    <Editor
+                        value={code}
+                        padding={10}
+                        onValueChange={() => {}}
+                        readOnly={true}
+                        highlight={(code) => highlight(code, languages.js, 'javascript')}
+                        style={{
+                            fontFamily: "monospace",
+                            fontSize: 17,
+                            minHeight: '400px'
+                        }}
+                    />
+                </SnippetBox>
+                <Box mt={2}>
+                    <OutlinedInput
+                        onKeyDown={handleEnter}
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        placeholder={isAwaitingInput ? "Type your input here..." : "Execution is not awaiting input"}
+                        fullWidth
+                        disabled={!isAwaitingInput || !isRunning}
+                    />
+                </Box>
+            </Box>
         </>
     );
-};
+});

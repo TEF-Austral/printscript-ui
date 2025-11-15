@@ -29,18 +29,18 @@ import {
     useTestSnippet
 } from "../utils/queries.tsx";
 import {SnippetBox} from "../components/snippet-table/SnippetBox.tsx";
+import {SnippetExecution, SnippetExecutionHandle} from "./SnippetExecution.tsx";
 import {BugReport, Delete, Download, Save, Share, Upload, CheckCircle, PlayArrow} from "@mui/icons-material";
 import {ShareSnippetModal} from "../components/snippet-detail/ShareSnippetModal.tsx";
 import {TestSnippetModal} from "../components/snippet-test/TestSnippetModal.tsx";
-import {SnippetExecution} from "./SnippetExecution.tsx";
-import ReadMoreIcon from '@mui/icons-material/ReadMore';
-import {queryClient} from "../App.tsx";
 import {DeleteConfirmationModal} from "../components/snippet-detail/DeleteConfirmationModal.tsx";
 import {DownloadModal} from "../components/snippet-detail/DownloadModal.tsx";
 import {useSnackbarContext} from "../contexts/snackbarContext.tsx";
 import {SharePermissions} from "../utils/snippetOperations";
 import {useSnippetsOperations} from "../utils/queries.tsx";
 import {TestCaseResult} from "../types/TestCaseResult.ts";
+import {queryClient} from "../App.tsx";
+import ReadMoreIcon from '@mui/icons-material/ReadMore';
 
 type SnippetDetailProps = {
     id: string;
@@ -59,6 +59,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
     const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
     const [testResult, setTestResult] = useState<TestCaseResult | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const executionRef = useRef<SnippetExecutionHandle | null>(null);
     const snippetOperations = useSnippetsOperations();
 
     const {data: snippet, isLoading} = useGetSnippetById(id);
@@ -96,8 +97,9 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                 createSnackbar('success', 'Snippet shared successfully');
                 setShareModalOppened(false);
             },
-            onError: (error: any) => {
-                const message = error?.response?.data?.message || error?.message || 'Error sharing snippet';
+            onError: (error: unknown) => {
+                const anyError = error as { response?: { data?: { message?: string } }; message?: string };
+                const message = anyError?.response?.data?.message || anyError?.message || 'Error sharing snippet';
                 createSnackbar('error', message);
             }
         });
@@ -247,6 +249,11 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                         <Tooltip title={"Test"}>
                             <IconButton onClick={() => setTestModalOpened(true)} data-testid="test-button">
                                 <BugReport/>
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title={"Run interactive"}>
+                            <IconButton onClick={() => executionRef.current?.start()} data-testid="run-execution-button">
+                                <PlayArrow data-testid="PlayArrowIcon" />
                             </IconButton>
                         </Tooltip>
                         <Tooltip title={"Download"}>
@@ -433,7 +440,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                                 )}
                             </Box>
                         ) : (
-                            <SnippetExecution snippetId={id}/>
+                            <SnippetExecution ref={executionRef} snippetId={id}/>
                         )}
                     </Box>
                 </>
