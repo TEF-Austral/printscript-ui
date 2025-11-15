@@ -1,11 +1,10 @@
 import {SnippetBox} from "../components/snippet-table/SnippetBox.tsx";
 import Editor from "react-simple-code-editor";
 import {highlight, languages} from "prismjs";
-import {OutlinedInput, Tooltip, IconButton, Box} from "@mui/material";
+import {OutlinedInput, Box} from "@mui/material";
 import {useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback} from "react";
 import {VITE_DOMAIN} from "../utils/constants.ts";
 import {useAuth0} from "@auth0/auth0-react";
-import {RestartAlt} from "@mui/icons-material";
 
 interface WebSocketMessage {
     type: 'Output' | 'InputRequest' | 'ExecutionFinished' | 'Error';
@@ -19,7 +18,6 @@ interface SnippetExecutionProps {
 
 export interface SnippetExecutionHandle {
     start: () => void;
-    restart: () => void;
 }
 
 export const SnippetExecution = forwardRef<SnippetExecutionHandle, SnippetExecutionProps>(({snippetId}: SnippetExecutionProps, ref) => {
@@ -28,7 +26,6 @@ export const SnippetExecution = forwardRef<SnippetExecutionHandle, SnippetExecut
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [isRunning, setIsRunning] = useState<boolean>(false);
     const [isAwaitingInput, setIsAwaitingInput] = useState<boolean>(false);
-    const [hasStarted, setHasStarted] = useState<boolean>(false);
     const {getAccessTokenSilently} = useAuth0();
     const wsRef = useRef<WebSocket | null>(null);
     const isMountedRef = useRef(true);
@@ -50,7 +47,6 @@ export const SnippetExecution = forwardRef<SnippetExecutionHandle, SnippetExecut
                 wsRef.current.close();
             }
 
-            setHasStarted(true);
             setOutput([]);
             setInput("");
             setIsAwaitingInput(false);
@@ -129,25 +125,14 @@ export const SnippetExecution = forwardRef<SnippetExecutionHandle, SnippetExecut
         }
     };
 
-    const handleRestart = useCallback(() => {
-        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-            wsRef.current.close();
-        }
-        setOutput([]);
-        setInput("");
-        setIsAwaitingInput(false);
-        setIsRunning(false);
-        setSocket(null);
-        setHasStarted(false);
-    }, []);
+
 
     useImperativeHandle(ref, () => ({
         start: () => {
             if (isRunning) return;
             startExecution();
-        },
-        restart: () => handleRestart()
-    }), [isRunning, startExecution, handleRestart]);
+        }
+    }), [isRunning, startExecution]);
 
     return (
         <>
@@ -166,7 +151,7 @@ export const SnippetExecution = forwardRef<SnippetExecutionHandle, SnippetExecut
                         }}
                     />
                 </SnippetBox>
-                <Box mt={2} display="flex" flexDirection="row" gap={2} alignItems="center">
+                <Box mt={2}>
                     <OutlinedInput
                         onKeyDown={handleEnter}
                         value={input}
@@ -175,13 +160,6 @@ export const SnippetExecution = forwardRef<SnippetExecutionHandle, SnippetExecut
                         fullWidth
                         disabled={!isAwaitingInput || !isRunning}
                     />
-                    {hasStarted && (
-                        <Tooltip title="Restart interactive execution">
-                            <IconButton onClick={handleRestart} aria-label="Restart" data-testid="restart-execution-button">
-                                <RestartAlt />
-                            </IconButton>
-                        </Tooltip>
-                    )}
                 </Box>
             </Box>
         </>
