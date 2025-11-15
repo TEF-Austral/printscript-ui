@@ -75,11 +75,8 @@ describe('Add snippet tests', () => {
         cy.get('.css-z3n8bp > .MuiBox-root > .MuiButton-contained').click();
 
         cy.wait('@deleteSnippet').then((interception) => {
-            // Asersión clave: Verificar que el borrado fue exitoso (204 No Content)
             expect(interception.response.statusCode).to.equal(204);
         });
 
-        // Opcional: Verificar que el modal/drawer se cierra después de la eliminación exitosa.
-        // cy.get('[data-testid="snippet-detail-container"]').should('not.exist');
     });
 })
