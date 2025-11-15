@@ -152,15 +152,6 @@ export const SnippetExecution = forwardRef<SnippetExecutionHandle, SnippetExecut
     return (
         <>
             <Box width="100%">
-                <Box display="flex" justifyContent="flex-end" gap={1} mb={1}>
-                    {hasStarted && (
-                        <Tooltip title="Restart interactive execution">
-                            <IconButton onClick={handleRestart} aria-label="Restart" data-testid="restart-execution-button">
-                                <RestartAlt />
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                </Box>
                 <SnippetBox flex={1} overflow={"auto"} minHeight={400} bgcolor={'black'} color={'white'} code={code}>
                     <Editor
                         value={code}
@@ -175,7 +166,7 @@ export const SnippetExecution = forwardRef<SnippetExecutionHandle, SnippetExecut
                         }}
                     />
                 </SnippetBox>
-                <Box mt={2}>
+                <Box mt={2} display="flex" flexDirection="row" gap={2} alignItems="center">
                     <OutlinedInput
                         onKeyDown={handleEnter}
                         value={input}
@@ -184,6 +175,13 @@ export const SnippetExecution = forwardRef<SnippetExecutionHandle, SnippetExecut
                         fullWidth
                         disabled={!isAwaitingInput || !isRunning}
                     />
+                    {hasStarted && (
+                        <Tooltip title="Restart interactive execution">
+                            <IconButton onClick={handleRestart} aria-label="Restart" data-testid="restart-execution-button">
+                                <RestartAlt />
+                            </IconButton>
+                        </Tooltip>
+                    )}
                 </Box>
             </Box>
         </>
