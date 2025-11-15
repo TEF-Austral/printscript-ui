@@ -141,6 +141,7 @@ export const SnippetFiltersComponent = ({
                         onChange={handleNameChange}
                         onKeyDown={handleNameKeyDown}
                         onBlur={() => onFiltersChange(localFilters)}
+                        inputProps={{ "data-testid": "snippet-search-input" }}
                     />
                 </Grid>
 

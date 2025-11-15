@@ -133,6 +133,7 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                         disableRipple
                         sx={{boxShadow: 0}}
                         onClick={handleCreateSnippet}
+                        data-testid="save-snippet-button"
                     >
                         <Box pr={1} display={"flex"} alignItems={"center"} justifyContent={"center"}>
                             {(loadingSnippet || isValidating) ? <CircularProgress size={24}/> : <Save/>}

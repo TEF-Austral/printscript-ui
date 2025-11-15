@@ -33,9 +33,18 @@ Cypress.Commands.add('loginToAuth0', (username: string, password: string) => {
         {
             validate: () => {
                 // Validate presence of access token in localStorage.
-                cy.wrap(localStorage)
-                    .invoke('getItem', 'authAccessToken')
-                    .should('exist')
+                cy.url().should('not.include', 'auth0.com')
+
+                // Verificar que estamos en la aplicación
+                cy.url().should('include', Cypress.config().baseUrl || '')
+
+                // Verificar que hay cookies de Auth0 (el SDK usa cookies)
+                cy.getCookies().then((cookies) => {
+                    const auth0Cookie = cookies.find(cookie =>
+                        cookie.name.includes('is.authenticated')
+                    )
+                    expect(auth0Cookie).to.exist
+                })
             },
         }
     )

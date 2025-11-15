@@ -11,5 +11,7 @@ export default defineConfig({
     },
     experimentalStudio: true,
     baseUrl: FRONTEND_URL,
+      viewportWidth: 1280,
+      viewportHeight: 1000,
   },
 });

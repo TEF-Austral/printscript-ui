@@ -27,6 +27,7 @@ dist-ssr
 next-env.d.ts
 .next
 
+cypress.env.json
 
 cypress/screenshots
 index.html

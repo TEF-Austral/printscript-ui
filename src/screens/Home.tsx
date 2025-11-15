@@ -102,7 +102,7 @@ const HomeScreen = () => {
                 anchor={"right"}
                 onClose={handleCloseModal}
                 ModalProps={{
-                    keepMounted: false, // This helps with cleanup
+                    keepMounted: false,
                 }}
             >
                 {snippetId && <SnippetDetail handleCloseModal={handleCloseModal} id={snippetId} />}
@@ -120,6 +120,7 @@ const HomeScreen = () => {
                 }}>Load snippet from file</MenuItem>
             </Menu>
             <input hidden type={"file"} ref={inputRef} multiple={false}
+                   data-testid="upload-file-input"
                    onChange={e => handleLoadSnippet(e?.target)} />
         </>
     );

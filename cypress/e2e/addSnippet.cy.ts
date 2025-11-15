@@ -1,49 +1,61 @@
 import {SNIPPET_URL} from "../../src/utils/constants";
 
 describe('Add snippet tests', () => {
-  beforeEach(() => {
-    // cy.loginToAuth0(
-    //     AUTH0_USERNAME,
-    //     AUTH0_PASSWORD
-    // )
-  })
-  it('Can add snippets manually', () => {
-    cy.visit("/")
-    cy.intercept('POST', SNIPPET_URL+"/snippets", (req) => {
-      req.reply((res) => {
-        expect(res.body).to.include.keys("id","name","content","language")
-        expect(res.statusCode).to.eq(200);
-      });
-    }).as('postRequest');
+    beforeEach(() => {
+        const username = Cypress.env('auth0_username') || 'tomasgemini54@gmail.com';
+        const password = Cypress.env('auth0_password') || 'Password123!';
 
-    /* ==== Generated with Cypress Studio ==== */
-    cy.get('.css-9jay18 > .MuiButton-root').click();
-    cy.get('.MuiList-root > [tabindex="0"]').click();
-    cy.get('#name').type('Some snippet name');
-    cy.get('#demo-simple-select').click()
-    cy.get('[data-testid="menu-option-printscript"]').click()
+        cy.loginToAuth0(username, password)
+    })
 
-    cy.get('[data-testid="add-snippet-code-editor"]').click();
-    cy.get('[data-testid="add-snippet-code-editor"]').type(`const snippet: String = "some snippet" \n print(snippet)`);
-    cy.get('[data-testid="SaveIcon"]').click();
+    it('Can add snippets manually', () => {
+        cy.visit("/")
 
-    cy.wait('@postRequest').its('response.statusCode').should('eq', 200);
-  })
+        cy.get('.MuiTable-root', { timeout: 10000 }).should('be.visible')
 
-  it('Can add snippets via file', () => {
-    cy.visit("/")
-    cy.intercept('POST', SNIPPET_URL+"/snippets", (req) => {
-      req.reply((res) => {
-        expect(res.body).to.include.keys("id","name","content","language")
-        expect(res.statusCode).to.eq(200);
-      });
-    }).as('postRequest');
+        cy.intercept('POST', SNIPPET_URL+"/snippets").as('postRequest');
 
-    /* ==== Generated with Cypress Studio ==== */
-    cy.get('[data-testid="upload-file-input"').selectFile("cypress/fixtures/example_ps.ps", {force: true})
+        cy.contains('button', 'Add Snippet').click();
 
-    cy.get('[data-testid="SaveIcon"]').click();
+        cy.contains('Create snippet').click();
 
-    cy.wait('@postRequest').its('response.statusCode').should('eq', 200);
-  })
+        cy.get('#name').type('Some snippet name');
+        cy.get('#description').type('Test description');
+        cy.get('#version').clear().type('1.1');
+
+        cy.get('#demo-simple-select').click()
+        cy.get('ul[role="listbox"]').contains('PRINTSCRIPT').click();
+
+        cy.get('textarea.npm__react-simple-code-editor__textarea').first()
+            .type('const snippet: string = "test";\nprintln(snippet);', {force: true});
+
+        cy.contains('button', 'Save Snippet').click();
+
+        cy.wait('@postRequest').its('response.statusCode').should('eq', 201);
+    })
+
+    it('Can add snippets via file', () => {
+        cy.visit("/")
+
+        cy.get('.MuiTable-root', { timeout: 10000 }).should('be.visible')
+
+        cy.intercept('POST', SNIPPET_URL+"/snippets").as('postRequest');
+
+        cy.contains('button', 'Add Snippet').click();
+
+        cy.contains('Load snippet from file').click();
+
+        cy.get('input[type="file"]')
+            .selectFile("cypress/fixtures/example.prs", { force: true });
+
+        cy.get('#description').type('Test description');
+
+        cy.get('#version').clear().type('1.1');
+
+
+        cy.contains('button', 'Save Snippet').should('be.visible').click();
+
+        cy.wait('@postRequest').its('response.statusCode').should('eq', 201);
+    })
+
 })

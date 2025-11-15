@@ -1,10 +1,11 @@
-import {Box,  Divider, Tab, Tabs, Typography} from "@mui/material";
+import {Box,  Button, Divider, Tab, Tabs, Typography} from "@mui/material";
 import {ModalWrapper} from "../common/ModalWrapper.tsx";
 import {SyntheticEvent, useState} from "react";
 import {AddRounded} from "@mui/icons-material";
 import {useGetTestCases, useUpsertTestCase, useRemoveTestCase} from "../../utils/queries.tsx";
 import {TabPanel} from "./TabPanel.tsx";
 import {queryClient} from "../../App.tsx";
+import {useSnackbarContext} from "../../contexts/snackbarContext.tsx";
 
 type TestSnippetModalProps = {
     open: boolean
@@ -17,6 +18,9 @@ type TestSnippetModalProps = {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const TestSnippetModal = ({open, onClose, snippetId, version: _version, onSelectTest}: TestSnippetModalProps) => {
     const [value, setValue] = useState(0);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [testToDelete, setTestToDelete] = useState<string | null>(null);
+    const {createSnackbar} = useSnackbarContext();
 
     const {data: testCases} = useGetTestCases(snippetId);
     const {mutateAsync: upsertTestCase} = useUpsertTestCase({
@@ -32,8 +36,33 @@ export const TestSnippetModal = ({open, onClose, snippetId, version: _version, o
         onSuccess: () => {
             queryClient.invalidateQueries(['testCases', snippetId]);
             setValue(0);
+            createSnackbar("success", "Test case deleted successfully");
+            setDeleteConfirmOpen(false);
+            setTestToDelete(null);
         }
     });
+
+    const handleDeleteClick = (testId: string) => {
+        setTestToDelete(testId);
+        setDeleteConfirmOpen(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (testToDelete) {
+            try {
+                await removeTestCase(testToDelete);
+            } catch (error) {
+                createSnackbar("error", "Error deleting test case");
+                setDeleteConfirmOpen(false);
+                setTestToDelete(null);
+            }
+        }
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteConfirmOpen(false);
+        setTestToDelete(null);
+    };
 
     const handleChange = (_: SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -65,7 +94,7 @@ export const TestSnippetModal = ({open, onClose, snippetId, version: _version, o
                         test={testCase}
                         snippetId={snippetId}
                         setTestCase={(tc) => upsertTestCase({ ...tc, id: testCase.id })}
-                        removeTestCase={(i) => removeTestCase(i)}
+                        removeTestCase={(i) => handleDeleteClick(i)}
                         onSelectTest={onSelectTest}
                         onClose={onClose}
                     />
@@ -77,6 +106,13 @@ export const TestSnippetModal = ({open, onClose, snippetId, version: _version, o
                     setTestCase={(tc) => upsertTestCase(tc)}
                 />
             </Box>
+            <ModalWrapper open={deleteConfirmOpen} onClose={handleCancelDelete}>
+                <Typography variant={"h6"}>Are you sure you want to delete this test case?</Typography>
+                <Box display={"flex"} justifyContent={"center"} mt={2}>
+                    <Button onClick={handleCancelDelete} variant={"outlined"}>Cancel</Button>
+                    <Button onClick={handleConfirmDelete} sx={{marginLeft: 2}} variant={"contained"} color={"error"}>Delete</Button>
+                </Box>
+            </ModalWrapper>
         </ModalWrapper>
     )
 }
