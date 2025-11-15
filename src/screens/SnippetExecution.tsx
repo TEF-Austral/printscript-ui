@@ -37,7 +37,7 @@ export const SnippetExecution = ({ snippetId }: SnippetExecutionProps) => {
                 }
 
                 const token = await getAccessTokenSilently();
-                const wsUrl = `wss://${VITE_DOMAIN}/api/snippet/ws/execute-interactive?snippetId=${snippetId}&token=${token}`;
+                const wsUrl = `wss://${VITE_DOMAIN}/ws/execute-interactive?snippetId=${snippetId}&token=${token}`;
 
                 const ws = new WebSocket(wsUrl);
                 wsRef.current = ws;
