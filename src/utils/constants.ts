@@ -14,7 +14,7 @@ export const AUTH0_PASSWORD =
     (import.meta.env && import.meta.env.VITE_AUTH0_PASSWORD) ?? "Password123!";
 
 export const PRINTSCRIPT_URL =
-    (import.meta.env && import.meta.env.VITE_PRINTSCRIPT_URL) ?? "/api/printscript";
+    (import.meta.env && import.meta.env.VITE_PRINTSCRIPT_URL) ?? "";
 
 export const AUTH0_DOMAIN =
     (import.meta.env && import.meta.env.VITE_AUTH0_DOMAIN) ?? "tf-austral.us.auth0.com";
