@@ -1,5 +1,5 @@
 import {ReactNode, useState} from "react";
-import {Alert, AlertColor, Snackbar} from "@mui/material";
+import {Alert, AlertColor, Box} from "@mui/material";
 import {SnackbarContext, SnackBarType} from "./snackbarContext.tsx";
 
 export const SnackbarProvider = ({children}: { children: ReactNode }) => {
@@ -28,37 +28,33 @@ export const SnackbarProvider = ({children}: { children: ReactNode }) => {
             createSnackbar: handleAddSnackbar
         }}>
             {children}
-            <>
-                {
-                    snackbars.map((snackbar,i) => (
-                        <Snackbar
-                            key={i}
-                            open={snackbars.includes(snackbar)}
-                            autoHideDuration={AUTO_HIDE_MS}
-                            onClose={() => handleDeleteSnackbar(snackbar)}
-                            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                            sx={{
-                                // Position each snackbar independently so they don't overlap
-                                position: 'fixed',
-                                bottom: `${16 + i * 80}px !important`,
-                                left: '16px !important',
-                                right: 'auto !important',
-                                top: 'auto !important',
-                                transform: 'none !important',
-                            }}
-                        >
-                            <Alert
-                                onClose={() => handleDeleteSnackbar(snackbar)}
-                                severity={snackbar.severity}
-                                variant="filled"
-                                sx={{width: '100%'}}
-                            >
-                                {snackbar.text}
-                            </Alert>
-                        </Snackbar>
-                    ))
-                }
-            </>
+            <Box
+                sx={{
+                    position: 'fixed',
+                    bottom: 16,
+                    left: 16,
+                    zIndex: 9999,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1,
+                    pointerEvents: 'none',
+                }}
+            >
+                {snackbars.map((snackbar, i) => (
+                    <Alert
+                        key={i}
+                        onClose={() => handleDeleteSnackbar(snackbar)}
+                        severity={snackbar.severity}
+                        variant="filled"
+                        sx={{
+                            minWidth: '300px',
+                            pointerEvents: 'auto',
+                        }}
+                    >
+                        {snackbar.text}
+                    </Alert>
+                ))}
+            </Box>
         </SnackbarContext.Provider>
     )
 }
