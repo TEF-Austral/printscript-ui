@@ -36,8 +36,9 @@ export const SnackbarProvider = ({children}: { children: ReactNode }) => {
                             open={snackbars.includes(snackbar)}
                             autoHideDuration={AUTO_HIDE_MS}
                             onClose={() => handleDeleteSnackbar(snackbar)}
-                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
                             sx={{
+                                // Offset each snackbar so they visually stack
                                 bottom: `${16 + i * 72}px`,
                             }}
                         >
