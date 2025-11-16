@@ -5,13 +5,12 @@ import {SnackbarContext, SnackBarType} from "./snackbarContext.tsx";
 export const SnackbarProvider = ({children}: { children: ReactNode }) => {
     const [snackbars, setSnackbars] = useState<SnackBarType[]>([])
 
-    const AUTO_HIDE_MS = 8000; // slower toasts
+    const AUTO_HIDE_MS = 5000;
 
     const handleAddSnackbar = (severity: AlertColor, text: string) => {
         const newSnackbar = { severity, text };
         setSnackbars(prevState => [...prevState, newSnackbar]);
 
-        // Ensure it disappears even if user doesn't manually close it
         setTimeout(() => {
             setSnackbars(prevState => prevState.filter(s => s !== newSnackbar));
         }, AUTO_HIDE_MS);
