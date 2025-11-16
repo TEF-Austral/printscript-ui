@@ -42,6 +42,13 @@ import {TestCaseResult} from "../types/TestCaseResult.ts";
 import {queryClient} from "../App.tsx";
 import ReadMoreIcon from '@mui/icons-material/ReadMore';
 
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import {SNIPPET_URL} from "../utils/constants.ts";
+import { useAuth0 } from "@auth0/auth0-react";
+
+
+
 type SnippetDetailProps = {
     id: string;
     handleCloseModal: () => void;
@@ -49,6 +56,7 @@ type SnippetDetailProps = {
 
 export const SnippetDetail = (props: SnippetDetailProps) => {
     const {id, handleCloseModal} = props;
+    const { getAccessTokenSilently } = useAuth0(); // Hook para WebSocket
     const [code, setCode] = useState("");
     const [shareModalOppened, setShareModalOppened] = useState(false);
     const [deleteConfirmationModalOpen, setDeleteConfirmationModalOpen] = useState(false);
@@ -77,6 +85,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
         onSuccess: () => queryClient.invalidateQueries(['snippet', id])
     });
 
+    // Usamos tu snackbar context
     const {createSnackbar} = useSnackbarContext();
 
     useEffect(() => {
@@ -90,6 +99,63 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
             setCode(formatSnippetData);
         }
     }, [formatSnippetData]);
+
+    // --- Lógica de WebSocket ---
+    useEffect(() => {
+        if (!id) return;
+
+        let stompClient: Client | null = null;
+
+        const connectAndSubscribe = async () => {
+            try {
+                const token = await getAccessTokenSilently();
+
+                stompClient = new Client({
+                    webSocketFactory: () => new SockJS(`${SNIPPET_URL}/ws`),
+                    connectHeaders: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    reconnectDelay: 5000,
+                });
+
+                stompClient.onConnect = () => {
+                    // Nos suscribimos al topic específico de este snippet
+                    const topic = `/topic/snippet/${id}/test-results`;
+                    stompClient?.subscribe(topic, (message) => {
+                        const result = JSON.parse(message.body) as TestCaseResult;
+
+                        // Usamos tu createSnackbar para mostrar la notificación
+                        if (result.passed) {
+                            createSnackbar('success', `✅ Test (ID: ${result.testId}) APROBADO`);
+                        } else {
+                            createSnackbar('error', `❌ Test (ID: ${result.testId}) FALLIDO`);
+                        }
+                    });
+                };
+
+                stompClient.onStompError = (frame) => {
+                    console.error('STOMP: Error de broker: ' + frame.headers['message']);
+                    console.error('STOMP: Detalles: ' + frame.body);
+                };
+
+                stompClient.activate();
+
+            } catch (error) {
+                console.error("Error al conectar WebSocket:", error);
+            }
+        };
+
+        connectAndSubscribe();
+
+        // Función de limpieza al desmontar el componente
+        return () => {
+            if (stompClient) {
+                stompClient.deactivate();
+            }
+        };
+    }, [id, getAccessTokenSilently, createSnackbar]);
+    // --- Fin Lógica de WebSocket ---
+
 
     function handleShareSnippet(userId: string, permissions: SharePermissions) {
         shareSnippet({snippetId: id, userId, permissions}, {

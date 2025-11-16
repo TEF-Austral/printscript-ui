@@ -21,6 +21,3 @@ export const AUTH0_DOMAIN =
 
 export const VITE_DOMAIN =
     (import.meta.env && import.meta.env.VITE_DOMAIN) ?? "printscript.duckdns.org";
-
-export const BACKEND_URL =
-    (import.meta.env && import.meta.env.VITE_BACKEND_URL) ?? "https://printscript-backend.duckdns.org";
