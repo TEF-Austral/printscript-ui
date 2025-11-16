@@ -38,8 +38,13 @@ export const SnackbarProvider = ({children}: { children: ReactNode }) => {
                             onClose={() => handleDeleteSnackbar(snackbar)}
                             anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
                             sx={{
-                                // Offset each snackbar so they visually stack
-                                bottom: `${16 + i * 72}px`,
+                                // Position each snackbar independently so they don't overlap
+                                position: 'fixed',
+                                bottom: `${16 + i * 80}px !important`,
+                                left: '16px !important',
+                                right: 'auto !important',
+                                top: 'auto !important',
+                                transform: 'none !important',
                             }}
                         >
                             <Alert
