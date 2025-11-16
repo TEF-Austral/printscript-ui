@@ -66,6 +66,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
     const [isValidating, setIsValidating] = useState(false);
     const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
     const [testResult, setTestResult] = useState<TestCaseResult | null>(null);
+    const [analyzeResult, setAnalyzeResult] = useState<{isValid: boolean; violations: Array<{message: string; line: number; column: number}>} | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const executionRef = useRef<SnippetExecutionHandle | null>(null);
     const snippetOperations = useSnippetsOperations();
@@ -81,7 +82,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
         isLoading: isFormatLoading,
         data: formatSnippetData
     } = useFormatSnippet();
-    const {mutate: analyzeSnippet, isLoading: isAnalyzeLoading, data: analyzeResult} = useAnalyzeSnippet();
+    const {mutate: analyzeSnippet, isLoading: isAnalyzeLoading, data: analyzeResultFromQuery} = useAnalyzeSnippet();
     const {mutateAsync: testSnippet, isLoading: isTestLoading} = useTestSnippet();
     const {mutate: updateSnippet, isLoading: isUpdateSnippetLoading} = useUpdateSnippetById({
         onSuccess: () => queryClient.invalidateQueries(['snippet', id])
@@ -102,7 +103,12 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
         }
     }, [formatSnippetData]);
 
-    // --- Lógica de WebSocket ---
+    useEffect(() => {
+        if (analyzeResultFromQuery) {
+            setAnalyzeResult(analyzeResultFromQuery);
+        }
+    }, [analyzeResultFromQuery]);
+
     useEffect(() => {
         if (!id) return;
 
@@ -246,6 +252,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
         }
         setIsValidating(true);
         setError(null);
+        setAnalyzeResult(null);
         try {
             const result = await snippetOperations.validateContent(
                 content,
@@ -253,6 +260,7 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                 snippet?.version ?? "1.0"
             );
             if (!result.isValid) {
+                setAnalyzeResult(result);
                 setError("Code does not parse");
                 createSnackbar('error', 'Code does not parse');
                 return false;

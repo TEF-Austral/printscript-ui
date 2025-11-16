@@ -9,7 +9,8 @@ import {
     Select,
     SelectChangeEvent,
     Typography,
-    Alert
+    Alert,
+    Chip
 } from "@mui/material";
 import {highlight, languages} from "prismjs";
 import {useEffect, useState} from "react";
@@ -37,6 +38,7 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     const [description, setDescription] = useState("")
     const [version, setVersion] = useState("1.0")
     const [error, setError] = useState<string | null>(null);
+    const [analyzeResult, setAnalyzeResult] = useState<{isValid: boolean; violations: Array<{message: string; line: number; column: number}>} | null>(null);
     const [isValidating, setIsValidating] = useState(false);
     const {createSnackbar} = useSnackbarContext();
     const snippetOperations = useSnippetsOperations();
@@ -58,11 +60,13 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
 
         setIsValidating(true);
         setError(null);
+        setAnalyzeResult(null);
 
         try {
             const result = await snippetOperations.validateContent(content, language, version);
 
             if (!result.isValid) {
+                setAnalyzeResult(result);
                 setError("Code does not parse");
                 createSnackbar('error', 'Code does not parse');
                 return false;
@@ -149,6 +153,29 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                         {error}
                     </Typography>
                 </Alert>
+            )}
+
+            {analyzeResult && !analyzeResult.isValid && (
+                <Box mb={2} data-testid="parse-errors">
+                    <Alert severity="error">
+                        <Typography variant="subtitle2" fontWeight="bold">
+                            Found {analyzeResult.violations.length} parse error(s):
+                        </Typography>
+                        {analyzeResult.violations.map((violation, idx) => (
+                            <Box key={idx} mt={1}>
+                                <Chip
+                                    label={`Line ${violation.line}, Col ${violation.column}`}
+                                    size="small"
+                                    color="error"
+                                    sx={{mr: 1}}
+                                />
+                                <Typography component="span" variant="body2">
+                                    {violation.message}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Alert>
+                </Box>
             )}
 
             <Box sx={{
