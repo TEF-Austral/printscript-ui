@@ -46,7 +46,7 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import {SNIPPET_URL} from "../utils/constants.ts";
 import { useAuth0 } from "@auth0/auth0-react";
-
+import type { TestCase } from "../types/TestCase";
 
 
 type SnippetDetailProps = {
@@ -72,6 +72,8 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
 
     const {data: snippet, isLoading} = useGetSnippetById(id);
     const {data: testCases} = useGetTestCases(id);
+    const latestTestCasesRef = useRef<TestCase[] | undefined>(undefined);
+    useEffect(() => { latestTestCasesRef.current = testCases; }, [testCases]);
     const {mutate: shareSnippet, isLoading: loadingShare} = useShareSnippet();
     const {
         mutate: formatSnippet,
@@ -124,11 +126,14 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                     stompClient?.subscribe(topic, (message) => {
                         const result = JSON.parse(message.body) as TestCaseResult;
 
+                        // Buscar el nombre del test si está disponible
+                        const testName = latestTestCasesRef.current?.find(t => t.id && parseInt(t.id) === result.testId)?.name;
+
                         // Usamos tu createSnackbar para mostrar la notificación
                         if (result.passed) {
-                            createSnackbar('success', `✅ Test (ID: ${result.testId}) APROBADO`);
+                            createSnackbar('success', testName ? `✅ Test "${testName}" APROBADO` : `✅ Test APROBADO`);
                         } else {
-                            createSnackbar('error', `❌ Test (ID: ${result.testId}) FALLIDO`);
+                            createSnackbar('error', testName ? `❌ Test "${testName}" FALLIDO` : `❌ Test FALLIDO`);
                         }
                     });
                 };

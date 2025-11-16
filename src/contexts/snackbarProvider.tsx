@@ -5,13 +5,16 @@ import {SnackbarContext, SnackBarType} from "./snackbarContext.tsx";
 export const SnackbarProvider = ({children}: { children: ReactNode }) => {
     const [snackbars, setSnackbars] = useState<SnackBarType[]>([])
 
+    const AUTO_HIDE_MS = 8000; // slower toasts
+
     const handleAddSnackbar = (severity: AlertColor, text: string) => {
         const newSnackbar = { severity, text };
         setSnackbars(prevState => [...prevState, newSnackbar]);
 
+        // Ensure it disappears even if user doesn't manually close it
         setTimeout(() => {
             setSnackbars(prevState => prevState.filter(s => s !== newSnackbar));
-        }, 6000);
+        }, AUTO_HIDE_MS);
     }
 
     const handleDeleteSnackbar = (snackbar: SnackBarType) => {
@@ -28,7 +31,16 @@ export const SnackbarProvider = ({children}: { children: ReactNode }) => {
             <>
                 {
                     snackbars.map((snackbar,i) => (
-                        <Snackbar key={i} open={snackbars.includes(snackbar)} autoHideDuration={6000} onClose={() => handleDeleteSnackbar(snackbar)}>
+                        <Snackbar
+                            key={i}
+                            open={snackbars.includes(snackbar)}
+                            autoHideDuration={AUTO_HIDE_MS}
+                            onClose={() => handleDeleteSnackbar(snackbar)}
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            sx={{
+                                bottom: `${16 + i * 72}px`,
+                            }}
+                        >
                             <Alert
                                 onClose={() => handleDeleteSnackbar(snackbar)}
                                 severity={snackbar.severity}
