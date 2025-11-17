@@ -52,7 +52,7 @@ export const SnippetExecution = forwardRef<SnippetExecutionHandle, SnippetExecut
             setIsAwaitingInput(false);
 
             const token = await getAccessTokenSilently();
-            const wsUrl = `wss://${VITE_DOMAIN}/ws/execute-interactive?snippetId=${snippetId}&token=${token}`;
+            const wsUrl = `wss://${VITE_DOMAIN}/api/ws/execute-interactive?snippetId=${snippetId}&token=${token}`;
 
             const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
