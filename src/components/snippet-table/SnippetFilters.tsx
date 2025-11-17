@@ -121,6 +121,7 @@ export const SnippetFiltersComponent = ({
                     <FormControl fullWidth size="small">
                         <InputLabel>Ownership</InputLabel>
                         <Select
+                            data-testid="ownership-select"
                             value={localFilters.ownership}
                             label="Ownership"
                             onChange={handleOwnershipChange}
@@ -149,6 +150,7 @@ export const SnippetFiltersComponent = ({
                     <FormControl fullWidth size="small">
                         <InputLabel>Language</InputLabel>
                         <Select
+                            data-testid="language-select"
                             value={localFilters.language || ""}
                             label="Language"
                             onChange={handleLanguageChange}
@@ -167,6 +169,7 @@ export const SnippetFiltersComponent = ({
                     <FormControl fullWidth size="small">
                         <InputLabel>Compliance</InputLabel>
                         <Select
+                            data-testid="compliance-select"
                             value={localFilters.compliance}
                             label="Compliance"
                             onChange={handleComplianceChange}
@@ -187,6 +190,7 @@ export const SnippetFiltersComponent = ({
                         <FormControl fullWidth size="small">
                             <InputLabel>Sort by</InputLabel>
                             <Select
+                                data-testid="sort-by-select"
                                 value={localFilters.sortBy}
                                 label="Sort by"
                                 onChange={handleSortByChange}
@@ -197,7 +201,7 @@ export const SnippetFiltersComponent = ({
                             </Select>
                         </FormControl>
                         <Tooltip title={`Sort ${localFilters.sortOrder === SortOrder.ASC ? 'Descending' : 'Ascending'}`}>
-                            <IconButton onClick={toggleSortOrder} size="small">
+                            <IconButton data-testid="sort-order-button" onClick={toggleSortOrder} size="small">
                                 {localFilters.sortOrder === SortOrder.ASC ? <ArrowUpward /> : <ArrowDownward />}
                             </IconButton>
                         </Tooltip>
@@ -213,6 +217,7 @@ export const SnippetFiltersComponent = ({
                                 startIcon={<Clear />}
                                 onClick={handleClearFilters}
                                 size="small"
+                                data-testid="clear-filters-button"
                             >
                                 Clear Filters
                             </Button>
@@ -225,6 +230,7 @@ export const SnippetFiltersComponent = ({
                                 onClick={onAddSnippet}
                                 size="small"
                                 sx={{ boxShadow: 0 }}
+                                data-testid="add-snippet-button"
                             >
                                 Add Snippet
                             </Button>
@@ -235,3 +241,4 @@ export const SnippetFiltersComponent = ({
         </Box>
     );
 };
+
