@@ -63,12 +63,17 @@ const filterSnippets = (url: string): BackendSnippet[] => {
     filtered = filtered.filter(s => expected.includes(String(s.complianceStatus)));
   }
 
+  const getFieldValue = (item: BackendSnippet, sortByKey: string): string => {
+    if (sortByKey === 'COMPLIANCE') return String(item.complianceStatus ?? '').toLowerCase();
+    if (sortByKey === 'NAME') return String(item.name ?? '').toLowerCase();
+    if (sortByKey === 'LANGUAGE') return String(item.language ?? '').toLowerCase();
+    return '';
+  };
+
   if (sortBy) {
     filtered.sort((a, b) => {
-      let valA: string = String(sortBy === 'COMPLIANCE' ? a.complianceStatus : (a as any)[sortBy.toLowerCase()]);
-      let valB: string = String(sortBy === 'COMPLIANCE' ? b.complianceStatus : (b as any)[sortBy.toLowerCase()]);
-      valA = valA.toLowerCase();
-      valB = valB.toLowerCase();
+      const valA = getFieldValue(a, sortBy);
+      const valB = getFieldValue(b, sortBy);
       if (valA < valB) return -1;
       if (valA > valB) return 1;
       return 0;
