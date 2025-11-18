@@ -1,5 +1,5 @@
 import { defineConfig } from "cypress";
-import dotenv from 'dotenv'
+import * as dotenv from 'dotenv'
 import {FRONTEND_URL} from "./src/utils/constants";
 dotenv.config()
 
@@ -11,5 +11,7 @@ export default defineConfig({
     },
     experimentalStudio: true,
     baseUrl: FRONTEND_URL,
+      viewportWidth: 1280,
+      viewportHeight: 1000,
   },
 });

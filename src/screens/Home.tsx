@@ -62,9 +62,9 @@ const HomeScreen = () => {
         }
         const file = files[0];
         const splitName = file.name.split(".");
-        const fileType = getFileLanguage(fileTypes ?? [], splitName.at(-1));
+        const fileType = getFileLanguage(fileTypes ?? [], splitName[splitName.length - 1]);
         if (!fileType) {
-            createSnackbar('error', `File type ${splitName.at(-1)} not supported`);
+            createSnackbar('error', `File type ${splitName[splitName.length - 1]} not supported`);
             return;
         }
         file.text().then((text) => {
@@ -102,7 +102,7 @@ const HomeScreen = () => {
                 anchor={"right"}
                 onClose={handleCloseModal}
                 ModalProps={{
-                    keepMounted: false, // This helps with cleanup
+                    keepMounted: false,
                 }}
             >
                 {snippetId && <SnippetDetail handleCloseModal={handleCloseModal} id={snippetId} />}
@@ -120,6 +120,7 @@ const HomeScreen = () => {
                 }}>Load snippet from file</MenuItem>
             </Menu>
             <input hidden type={"file"} ref={inputRef} multiple={false}
+                   data-testid="upload-file-input"
                    onChange={e => handleLoadSnippet(e?.target)} />
         </>
     );

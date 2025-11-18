@@ -52,6 +52,23 @@ export class HttpSnippetOperations implements SnippetOperations {
     return (await res.json()) as T;
   }
 
+  private async requestNoContent(path: string, opts: RequestInit = {}): Promise<void> {
+    const token = await this.getToken();
+
+    const res = await fetch(`${this.snippetUrl}${path}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...opts.headers,
+      },
+      ...opts,
+    });
+    if (!res.ok) {
+      const txt = await res.text();
+      throw new Error(`HTTP ${res.status}: ${txt}`);
+    }
+  }
+
   async createSnippet(createSnippet: CreateSnippet): Promise<Snippet> {
     return this.request<Snippet>(`/snippets`, {
       method: "POST",
@@ -413,7 +430,7 @@ export class HttpSnippetOperations implements SnippetOperations {
   }
 
   async deleteSnippet(id: string): Promise<string> {
-    await this.request(`/snippets/${encodeURIComponent(id)}`, {
+    await this.requestNoContent(`/snippets/${encodeURIComponent(id)}`, {
       method: "DELETE",
     });
     return id;

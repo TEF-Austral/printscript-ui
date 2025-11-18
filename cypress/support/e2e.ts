@@ -18,27 +18,36 @@ import './commands'
 import {loginViaAuth0Ui} from "./auth-provider-commands/auth0";
 
 Cypress.Commands.add('loginToAuth0', (username: string, password: string) => {
-  const log = Cypress.log({
-    displayName: 'AUTH0 LOGIN',
-    message: [`🔐 Authenticating | ${username}`],
-    autoEnd: false,
-  })
-  log.snapshot('before')
+    const log = Cypress.log({
+        displayName: 'AUTH0 LOGIN',
+        message: [`🔐 Authenticating | ${username}`],
+        autoEnd: false,
+    })
+    log.snapshot('before')
 
-  cy.session(
-      `auth0-${username}`,
-      () => {
-        loginViaAuth0Ui(username, password)
-      },
-      {
-        validate: () => {
-          // Validate presence of access token in localStorage.
-          cy.wrap(localStorage)
-              .invoke('getItem', 'authAccessToken')
-              .should('exist')
+    cy.session(
+        `auth0-${username}`,
+        () => {
+            loginViaAuth0Ui(username, password)
         },
-      }
-  )
-  log.snapshot('after')
-  log.end()
+        {
+            validate: () => {
+                // Validate presence of access token in localStorage.
+                cy.url().should('not.include', 'auth0.com')
+
+                // Verificar que estamos en la aplicación
+                cy.url().should('include', Cypress.config().baseUrl || '')
+
+                // Verificar que hay cookies de Auth0 (el SDK usa cookies)
+                cy.getCookies().then((cookies) => {
+                    const auth0Cookie = cookies.find(cookie =>
+                        cookie.name.includes('is.authenticated')
+                    )
+                    expect(auth0Cookie).to.exist
+                })
+            },
+        }
+    )
+    log.snapshot('after')
+    log.end()
 })

@@ -1,9 +1,11 @@
 import {ReactNode, useState} from "react";
-import {Alert, AlertColor, Snackbar} from "@mui/material";
+import {Alert, AlertColor, Box} from "@mui/material";
 import {SnackbarContext, SnackBarType} from "./snackbarContext.tsx";
 
 export const SnackbarProvider = ({children}: { children: ReactNode }) => {
     const [snackbars, setSnackbars] = useState<SnackBarType[]>([])
+
+    const AUTO_HIDE_MS = 5000;
 
     const handleAddSnackbar = (severity: AlertColor, text: string) => {
         const newSnackbar = { severity, text };
@@ -11,7 +13,7 @@ export const SnackbarProvider = ({children}: { children: ReactNode }) => {
 
         setTimeout(() => {
             setSnackbars(prevState => prevState.filter(s => s !== newSnackbar));
-        }, 6000);
+        }, AUTO_HIDE_MS);
     }
 
     const handleDeleteSnackbar = (snackbar: SnackBarType) => {
@@ -25,22 +27,33 @@ export const SnackbarProvider = ({children}: { children: ReactNode }) => {
             createSnackbar: handleAddSnackbar
         }}>
             {children}
-            <>
-                {
-                    snackbars.map((snackbar,i) => (
-                        <Snackbar key={i} open={snackbars.includes(snackbar)} autoHideDuration={6000} onClose={() => handleDeleteSnackbar(snackbar)}>
-                            <Alert
-                                onClose={() => handleDeleteSnackbar(snackbar)}
-                                severity={snackbar.severity}
-                                variant="filled"
-                                sx={{width: '100%'}}
-                            >
-                                {snackbar.text}
-                            </Alert>
-                        </Snackbar>
-                    ))
-                }
-            </>
+            <Box
+                sx={{
+                    position: 'fixed',
+                    bottom: 16,
+                    left: 16,
+                    zIndex: 9999,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1,
+                    pointerEvents: 'none',
+                }}
+            >
+                {snackbars.map((snackbar, i) => (
+                    <Alert
+                        key={i}
+                        onClose={() => handleDeleteSnackbar(snackbar)}
+                        severity={snackbar.severity}
+                        variant="filled"
+                        sx={{
+                            minWidth: '300px',
+                            pointerEvents: 'auto',
+                        }}
+                    >
+                        {snackbar.text}
+                    </Alert>
+                ))}
+            </Box>
         </SnackbarContext.Provider>
     )
 }
