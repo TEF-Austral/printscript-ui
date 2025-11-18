@@ -9,13 +9,10 @@ describe('Add snippet tests', () => {
 
         cy.visit("/")
 
-        // Esperar a que carguen los snippets
         cy.get('[data-testid="snippet-row"]', { timeout: 10000 }).should('have.length.greaterThan', 0)
 
-        // Hacer clic en el primer snippet
         cy.get('[data-testid="snippet-row"]').first().click();
 
-        // Esperar a que se abra el drawer con los detalles
         cy.get('.css-lv0yle', { timeout: 10000 }).should('be.visible')
     })
 

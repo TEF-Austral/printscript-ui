@@ -1,7 +1,7 @@
-import {SNIPPET_URL, FRONTEND_URL, AUTH0_USERNAME, AUTH0_PASSWORD} from "../../src/utils/constants"; //AUTH0_PASSWORD, AUTH0_USERNAME,
+import {SNIPPET_URL, FRONTEND_URL, AUTH0_USERNAME, AUTH0_PASSWORD} from "../../src/utils/constants";
 import {CreateSnippet} from "../../src/utils/snippet";
 
-const authToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IktsaG5XZGpBNkFDNEJDZFBkMVFkNyJ9.eyJ1c2VybmFtZSI6InRvbWFzZ2VtaW5pNTQiLCJpc3MiOiJodHRwczovL3RmLWF1c3RyYWwudXMuYXV0aDAuY29tLyIsInN1YiI6ImF1dGgwfDY5MTc1NmY3YmM1OTIwZjAyOGZmZmJlMSIsImF1ZCI6WyJodHRwczovL3RmLWF1c3RyYWwuY29tL2FwaSIsImh0dHBzOi8vdGYtYXVzdHJhbC51cy5hdXRoMC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNzYzMTU2OTE2LCJleHAiOjE3NjMyNDMzMTYsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJhenAiOiJuTVFXeWl2M0VrZUE0UVJValNYRjdRdW9wekZRMjNDNyJ9.oLA7VvKoxVo5exoGzDWpDFnFXSkUuv86MK1Hed4N_BuJuO6TECNEmCObTTOUnA1umF55pZkOkQx-xRtini6Q1n8JsS0eQgjTI7EdZjzPK5DTtgrdxHDv1j9ynZkLSSAAr-F6SVxfPYih7Kmpwqu9Bdh8H6DvjHV3ewo-vlIVfAO-GSkRIB8mARLer1SF32Pka__kThmCqVFmmahMAh13ltFIMmHQZidPFKR8AepUo7nUrtb3lVHsQiroWwQpwa9mZDMuLon0QLRuQpdY5T8T_lTuecHVLvxkhrqvocvwIbsq9A3GLkH8w77TyW3qtO_BBScmkKWRszsi8Fx-_-IXdw"
+const authToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IktsaG5XZGpBNkFDNEJDZFBkMVFkNyJ9.eyJ1c2VybmFtZSI6InRvbWFzZ2VtaW5pNTQiLCJpc3MiOiJodHRwczovL3RmLWF1c3RyYWwudXMuYXV0aDAuY29tLyIsInN1YiI6ImF1dGgwfDY5MTc1NmY3YmM1OTIwZjAyOGZmZmJlMSIsImF1ZCI6WyJodHRwczovL3RmLWF1c3RyYWwuY29tL2FwaSIsImh0dHBzOi8vdGYtYXVzdHJhbC51cy5hdXRoMC5jb20vdXNlcmluZm8iXSwiaWF0IjoxNzYzNDg0NjA1LCJleHAiOjE3NjM1NzEwMDUsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJhenAiOiJuTVFXeWl2M0VrZUE0UVJValNYRjdRdW9wekZRMjNDNyJ9.DGoa8pb6LbMBjP5wOxq3h4J6MBvVfKG2vJKdr8P3HiDXTdWzbMLIQXGWh-TduNb_J8VF9ZxrxZIV4eaIxsOf8xXU9JAvx9TEiSOvl0XTD3JRp7DqjKyTZgZscqJlarzO1IPbzSJFm26J9N7TaHe31L8o39hEK0f2daw5lE8D_6Eci0pdp60C_ta41JXjEI93jh90L7SFbXy-rbfN_P6diSz86DORVq6bNbL1JIKfbqAeY5Un2xcAiZoi7kvcO1M2diKJ6CbZIx748D3bjGX8PGXKsJf-aHCKVFpEXogc6qAkSTnGcPoAzKGn2L0llkkmIia56QwlOEfXSrxPVU-QQQ"
 
 describe('Home', () => {
     beforeEach(() => {
@@ -81,7 +81,6 @@ describe('Home', () => {
 
     })
 
-    // You need to have at least 1 snippet in your DB for this test to pass
     it('Renders the first snippets', () => {
         cy.visit(FRONTEND_URL)
         const first10Snippets = cy.get('[data-testid="snippet-row"]')
@@ -110,9 +109,9 @@ describe('Home', () => {
 
         cy.request({
             method: 'POST',
-            url: SNIPPET_URL + '/snippets', // Adjust if you have a different base URL configured in Cypress
+            url: SNIPPET_URL + '/snippets',
             body: snippetData,
-            failOnStatusCode: true, // Optional: set to true if you want the test to fail on non-2xx status codes
+            failOnStatusCode: true,
             headers: {
                 'Authorization': `Bearer ${authToken}`
             }
