@@ -6,7 +6,8 @@ export default defineConfig(({ mode }) => {
   return {
     define: {
       'process.env.FRONTEND_URL': JSON.stringify(env.FRONTEND_URL),
-      'process.env.BACKEND_URL': JSON.stringify(env.BACKEND_URL)
+      'process.env.BACKEND_URL': JSON.stringify(env.BACKEND_URL),
+      global: 'window',
     },
     plugins: [react()],
   }

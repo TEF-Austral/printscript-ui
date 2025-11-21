@@ -1,7 +1,8 @@
-import {AppBar, Box, Button, Container, Toolbar, Typography} from "@mui/material";
-import {Code, Rule} from "@mui/icons-material";
-import {ReactNode} from "react";
-import {useLocation, useNavigate} from "react-router-dom";
+import { AppBar, Box, Button, Container, Toolbar, Typography } from "@mui/material";
+import { Code, Rule } from "@mui/icons-material";
+import { ReactNode } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {UserProfile} from "../profile/UserProfile.tsx";
 
 type PageType = {
     title: string;
@@ -12,26 +13,27 @@ type PageType = {
 const pages: PageType[] = [{
     title: 'Snippets',
     path: '/',
-    icon: <Code/>
+    icon: <Code />
 }, {
     title: 'Rules',
     path: '/rules',
-    icon: <Rule/>
+    icon: <Rule />
 }];
 
 export const Navbar = () => {
     const location = useLocation();
     const navigate = useNavigate();
+
     return (
         <AppBar position="static" elevation={0}>
             <Container maxWidth="xl">
-                <Toolbar disableGutters sx={{display: "flex", gap: "24px"}}>
+                <Toolbar disableGutters sx={{ display: "flex", gap: "24px" }}>
                     <Typography
                         variant="h6"
                         noWrap
                         component="a"
                         sx={{
-                            display: {xs: 'none', md: 'flex'},
+                            display: { xs: 'none', md: 'flex' },
                             fontWeight: 700,
                             color: 'inherit',
                             textDecoration: 'none',
@@ -39,7 +41,7 @@ export const Navbar = () => {
                     >
                         Printscript
                     </Typography>
-                    <Box sx={{flexGrow: 1, display: {xs: 'none', md: 'flex'}, gap: '4px'}}>
+                    <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: '4px' }}>
                         {pages.map((page) => (
                             <Button
                                 key={page.title}
@@ -61,6 +63,7 @@ export const Navbar = () => {
                             </Button>
                         ))}
                     </Box>
+                    <UserProfile />
                 </Toolbar>
             </Container>
         </AppBar>
