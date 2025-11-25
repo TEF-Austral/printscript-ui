@@ -6,7 +6,7 @@ export function loginViaAuth0Ui(username: string, password: string) {
 
     // Login on Auth0.
     cy.origin(
-        Cypress.env('auth0_domain'),
+        Cypress.env('AUTH0_DOMAIN'),
         { args: { username, password } },
         ({ username, password }) => {
             cy.get('input#username').type(username)
