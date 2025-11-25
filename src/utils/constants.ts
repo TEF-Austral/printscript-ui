@@ -20,4 +20,4 @@ export const AUTH0_DOMAIN =
     (import.meta.env && import.meta.env.VITE_AUTH0_DOMAIN) ?? "tf-austral.us.auth0.com";
 
 export const VITE_DOMAIN =
-    (import.meta.env && import.meta.env.VITE_DOMAIN) ?? "printscriptdev.duckdns.org";
+    (import.meta.env && import.meta.env.VITE_DOMAIN) ?? "printscript.duckdns.org";
