@@ -1,5 +1,5 @@
 export const FRONTEND_URL =
-    (import.meta.env && import.meta.env.VITE_FRONTEND_URL) ?? "https://printscriptdev.duckdns.org";
+    (import.meta.env && import.meta.env.VITE_FRONTEND_URL) ?? "https://printscript.duckdns.org";
 
 export const SNIPPET_URL =
     (import.meta.env && import.meta.env.VITE_BACKEND_URL) ?? "/api/snippet";
